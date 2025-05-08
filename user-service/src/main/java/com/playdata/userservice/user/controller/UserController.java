@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class UserController {
 
+
+
     // 컨트롤러는 서비스에 의존하고 있다. (요청과 함께 전달받은 데이터를 서비스에게 넘겨야 함!)
     // 빈 등록된 서비스 객체를 자동으로 주입 받자!
     private final UserService userService;
