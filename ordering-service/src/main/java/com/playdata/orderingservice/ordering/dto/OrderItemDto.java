@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class OrderItemDto {
     private Long productId; // 상품 ID
     private int quantity; // 수량
