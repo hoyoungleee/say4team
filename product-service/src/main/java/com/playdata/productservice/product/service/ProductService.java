@@ -201,7 +201,7 @@ public class ProductService {
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
 
             List<ProductImages> exImages = product.getProductImages();
-            for (int i =0; i<dto.getImages().size(); i++) {
+            for (int i =0; i<exImages.size(); i++) {
                 String imgUrl = exImages.get(i).getImgUrl();
                 s3Config.deleteFromS3Bucket(imgUrl);
             }
@@ -215,9 +215,12 @@ public class ProductService {
                 String url =
                         s3Config.uploadToS3Bucket(image.getBytes(), uniqueImageName);
                 productImages.setImgUrl(url);
+                productImages.setImgOrder(i);
+                productImages.setProduct(product);
                 newImages.add(productImages);
             }
-            product.setProductImages(newImages);
+            product.getProductImages().clear();                // 이전 이미지 orphan으로 인식됨
+            product.getProductImages().addAll(newImages);
         }
 
         if(dto.getCategoryId() != null && !dto.getCategoryId().isEmpty()) {
