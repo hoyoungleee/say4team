@@ -17,7 +17,7 @@ public class ProductImages {
     @Column(name = "img_id")
     private Long imgId;
 
-    @Column(name = "img_url", nullable = false, length = 255)
+    @Column(name = "img_url", nullable = false, length = 1000)
     private String imgUrl;
 
     @Column(name = "img_order", nullable = false)

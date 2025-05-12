@@ -85,19 +85,18 @@ public class ProductService {
 
     public List<ProductResDto> productList(ProductSearchDto dto, Pageable pageable) {
         Page<Product> products;
-        if (dto.getSearchType() == null || dto.getSearchType().equals("ALL")) {
-            if(!dto.getSearchName().isEmpty()){
+        if ( dto.getSearchType() == null || "ALL".equals(dto.getSearchType())) {
+            if (dto.getSearchName() != null && !dto.getSearchName().isEmpty()) {
                 products = productRepository.findByNameValue(dto.getSearchName(), pageable);
-            }
-            else {
+            } else {
                 products = productRepository.findAll(pageable);
-
             }
         } else {
-            if(!dto.getSearchName().isEmpty()){
-                products = productRepository.findByNameValueAndCategory_CategoryId(dto.getSearchName(), dto.getCategoryId(), pageable);
+            Long categoryId = Long.parseLong(dto.getSearchType());
+            if (dto.getSearchName() != null && !dto.getSearchName().isEmpty()) {
+                products = productRepository.findByNameValueAndCategory_CategoryId(dto.getSearchName(), categoryId, pageable);
             } else {
-                products = productRepository.findByCategoryId(dto.getCategoryId(), pageable);
+                products = productRepository.findByCategoryId(categoryId, pageable);
             }
         }
 

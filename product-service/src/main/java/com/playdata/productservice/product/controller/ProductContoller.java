@@ -73,7 +73,7 @@ public class ProductContoller {
         productService.productUpdate(dto, id);
 
         CommonResDto resDto
-                = new CommonResDto(HttpStatus.OK, "삭제 완료", id);
+                = new CommonResDto(HttpStatus.OK, "수정 완료", id);
 
         return ResponseEntity.ok().body(resDto);
     }

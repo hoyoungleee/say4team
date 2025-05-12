@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,8 +20,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.name LIKE %?1%")
     Page<Product> findByNameValue(String keyword,
                                   Pageable pageable);
-
-    Page<Product> findByNameValueAndCategory_CategoryId(String name, Long categoryId, Pageable pageable);
+    @Query("SELECT p FROM Product p JOIN p.category c WHERE p.name LIKE %:name% AND c.categoryId = :categoryId")
+    Page<Product> findByNameValueAndCategory_CategoryId(@Param("name") String name, @Param("categoryId") Long categoryId, Pageable pageable);
 
     List<Product> findByProductIdIn(List<Long> ids);
 

@@ -31,8 +31,9 @@ public class Product extends BaseTimeEntity {
 
     private int stockQuantity;
 
+    @Column(length = 1000)
     private String mainImagePath;
-
+    @Column(length = 1000)
     private String thumbnailPath;
 
     private String description;
