@@ -4,16 +4,24 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+import lombok.*;
+
+import java.util.List;
+
 @Getter @Setter @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ProductResDto {
-
-    private Long productId;
+    private Long id;
     private String name;
+    private int price;
+    private int stockQuantity;
+    private String mainImagePath;
+    private String thumbnailPath;
     private String description;
-    private BigDecimal price;
-//    private String thumbnailUrl;
+    private String categoryName; // ← 여기에 category.getName() 결과
+
+    private List<String> productImages;
 
 }

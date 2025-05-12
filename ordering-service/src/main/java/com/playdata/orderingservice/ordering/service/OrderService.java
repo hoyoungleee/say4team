@@ -1,7 +1,13 @@
 package com.playdata.orderingservice.ordering.service;
 
+import com.playdata.orderingservice.client.ProductServiceClient;
+import com.playdata.orderingservice.client.UserServiceClient;
+import com.playdata.orderingservice.common.auth.TokenUserInfo;
+import com.playdata.orderingservice.common.dto.CommonResDto;
 import com.playdata.orderingservice.ordering.dto.OrderRequestDto;
 import com.playdata.orderingservice.ordering.dto.OrderResponseDto;
+import com.playdata.orderingservice.ordering.dto.ProductResDto;
+import com.playdata.orderingservice.ordering.dto.UserResDto;
 import com.playdata.orderingservice.ordering.entity.Order;
 import com.playdata.orderingservice.ordering.entity.OrderItem;
 import com.playdata.orderingservice.ordering.entity.OrderStatus;
@@ -21,56 +27,75 @@ public class OrderService {
 
     private final OrderRepository orderRepository; // 주문 데이터베이스 연동
     private final OrderMapper orderMapper; // DTO와 Entity 변환을 위한 Mapper
+    private final UserServiceClient userServiceClient; // 사용자 정보를 받아오는 클라이언트
+    private final ProductServiceClient productServiceClient;
 
     // 주문을 생성하는 메서드
-    // orderRequestDto 주문 요청 DTO
-    public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
-        // DTO -> Entity 변환
+    public Order createOrder(OrderRequestDto orderRequestDto, TokenUserInfo tokenUserInfo) {
+        // JWT 토큰에서 유저 정보 가져오기
+        UserResDto userResDto = getUserResDto(tokenUserInfo.getEmail());
+        Long userId = userResDto.getUserId();
+
+        // 주문 엔티티 생성
         Order order = Order.builder()
                 .totalPrice(orderRequestDto.getTotalPrice())
-                .orderStatus(OrderStatus.PENDING_USER_FAILURE)
+                .orderStatus(OrderStatus.PENDING_USER_FAILURE)  // 초기 상태는 USER_FAILURE
                 .orderedAt(LocalDateTime.now())
-                .userId(orderRequestDto.getUserId())
+                .userId(userId)
                 .address(orderRequestDto.getAddress())
                 .build();
 
-        // OrderItem 설정: order 참조를 직접 넣어줘야 함
+        // 주문 항목들을 순차적으로 처리하여 OrderItem 엔티티 생성
         List<OrderItem> orderItems = orderRequestDto.getOrderItems().stream()
-                .map(dto -> OrderItem.builder()
-                        .quantity(dto.getQuantity())
-                        .unitPrice(dto.getUnitPrice())
-                        .productId(dto.getProductId())
-                        .order(order) // 여기! Order 설정
-                        .build())
+                .map(dto -> {
+                    // 상품 정보를 조회하여 가격 가져오기
+                    ProductResDto product = getProductById(dto.getProductId()); // 상품 서비스에서 가격을 가져옴
+                    return OrderItem.builder()
+                            .quantity(dto.getQuantity())
+                            .unitPrice(product.getPrice()) // 상품의 가격을 unitPrice로 설정
+                            .productId(dto.getProductId())
+                            .order(order)
+                            .build();
+                })
                 .toList();
 
-        // order에 orderItems 세팅
+        // 생성된 주문 항목들을 주문에 설정
         order.setOrderItems(orderItems);
 
-        // 저장
-        Order savedOrder = orderRepository.save(order);
-
-        return orderMapper.toDto(savedOrder);
+        // 주문 저장
+        return orderRepository.save(order);
     }
 
+    // 상품 정보를 조회하는 메서드
+    public ProductResDto getProductById(Long productId) {
+        // 상품 서비스에서 상품 정보를 가져오는 로직 (여기서는 예시로 가정)
+        return productServiceClient.getProductById(productId);  // productServiceClient는 외부 API 호출 등을 통해 상품 정보 조회
+    }
+
+    // 사용자 정보를 가져오는 메서드
+    public UserResDto getUserResDto(String email) {
+        // 사용자 서비스 클라이언트를 통해 사용자 정보 조회
+        CommonResDto<UserResDto> byEmail = userServiceClient.findByEmail(email);
+
+        // 결과 반환
+        return byEmail.getResult();
+    }
 
     // 주문 조회 메서드
-    // orderId 주문 ID
     public OrderResponseDto getOrder(Long orderId) {
         // 주문 ID로 주문 조회
         Optional<Order> order = orderRepository.findById(orderId);
+
         // 주문이 없으면 예외 발생
         if (order.isEmpty()) {
             throw new ServiceUnavailableException("주문 ID가 존재 하지 않습니다: " + orderId);
         }
+
         // 조회된 주문을 DTO로 변환하여 반환
-        return orderMapper.toDto(order.get()); // 주문 응답 DTO
+        return orderMapper.toDto(order.get());  // 주문 응답 DTO
     }
 
-
     // 주문 상태 변경 메서드
-    // orderId 주문 ID
-    // status 변경할 주문 상태
     public OrderResponseDto updateOrderStatus(Long orderId, String status) {
         // 주문 ID로 주문 조회
         Optional<Order> order = orderRepository.findById(orderId);
@@ -129,5 +154,4 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.CANCELED);
         orderRepository.save(order);
     }
-
 }

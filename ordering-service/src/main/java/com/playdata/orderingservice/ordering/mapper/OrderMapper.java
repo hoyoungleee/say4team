@@ -20,34 +20,30 @@ public class OrderMapper {
 
     // OrderRequestDto를 Order 엔티티로 변환하는 메서드
     // OrderStatus 문자열을 Enum으로 변환하는 부분에 예외 처리 추가
-    public Order toEntity(OrderRequestDto dto) {
-        // OrderStatus 변환 시 예외 처리 추가
-        OrderStatus orderStatus;
-        try {
-            orderStatus = OrderStatus.valueOf(dto.getOrderStatus()); // OrderStatus Enum으로 변환
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("유효하지 않은 주문 상태입니다: " + dto.getOrderStatus());
-        }
+    public Order toEntity(OrderRequestDto dto, Long userId) {
+        // 기본 주문 상태를 직접 설정
+        OrderStatus orderStatus = OrderStatus.PENDING_USER_FAILURE;
 
-        // 나머지 코드
+        // OrderItem 엔티티 리스트 생성
         List<OrderItem> orderItems = dto.getOrderItems().stream()
-                .map(item -> toOrderItemEntity(item, null))  // null을 임시로 넣어주고 후에 setOrderItems에서 설정
+                .map(item -> toOrderItemEntity(item, null)) // order는 나중에 set
                 .collect(Collectors.toList());
 
-        // DTO의 데이터를 기반으로 Order 엔티티 객체 생성
+        // Order 객체 생성
         Order order = Order.builder()
-                .userId(dto.getUserId()) // 사용자 ID 설정
-                .totalPrice(dto.getTotalPrice()) // 총 가격 설정
-                .orderStatus(orderStatus) // 변환된 OrderStatus 설정
-                .address(dto.getAddress()) // 주소 설정
-                .orderItems(orderItems) // OrderItem 리스트 설정
+                .userId(userId)
+                .totalPrice(dto.getTotalPrice())
+                .orderStatus(orderStatus)
+                .address(dto.getAddress())
+                .orderItems(orderItems)
                 .build();
 
-        // OrderItem 엔티티에 올바른 Order 참조 설정
-        orderItems.forEach(item -> item.setOrder(order));  // 각 orderItem의 order를 설정
+        // 각 OrderItem에 order 참조 설정
+        orderItems.forEach(item -> item.setOrder(order));
 
         return order;
     }
+
 
 
     // 기존처럼 OrderItemDto를 OrderItem 엔티티로 변환하는 메서드
