@@ -14,6 +14,6 @@ public class ProductResDto {
     private String name;
     private String description;
     private BigDecimal price;
-    private String thumbnailUrl;
+//    private String thumbnailUrl;
 
 }

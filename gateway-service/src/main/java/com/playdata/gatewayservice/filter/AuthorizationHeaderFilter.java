@@ -29,8 +29,8 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
     private final List<String> allowUrl = Arrays.asList(
             "/user/create", "/user/doLogin", "/user/refresh",
-            "/product/list", "/user/health-check", "/demo/no-circuit",
-            "/demo/with-circuit", "/user/hello", "/product/hello", "/order/hello"
+            "/product/list", "/user/health-check", "/orders/**",
+            "/ordering-service/orders/**"
     );
 
     @Override
@@ -43,7 +43,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             boolean isAllowed
                     = allowUrl.stream()
                     .anyMatch(url -> antPathMatcher.match(url, path));
-            log.info("isAllowed:{}", isAllowed);
+            log.info("isAllowed: {}", isAllowed);
 
             if (isAllowed || path.startsWith("/actuator")) {
                 // 허용 url이 맞다면 그냥 통과~
@@ -52,19 +52,19 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             }
 
             // 토큰이 필요한 요청은 Header에 Authorization 이라는 이름으로 Bearer ~~~가 전달됨.
-            String authorizationHeader
-                    = exchange.getRequest()
-                    .getHeaders().getFirst("Authorization");
+            String authorizationHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
 
-            if (authorizationHeader == null
-                    || !authorizationHeader.startsWith("Bearer ")) {
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 // 토큰이 존재하지 않거나, Bearer로 시작하지 않는다면
+                if (path.startsWith("/ordering-service/orders/")) {
+                    // 주문 관련 경로에서 로그인하지 않았다면 NO_LOGIN 처리
+                    return onError(exchange, "NO_LOGIN", HttpStatus.UNAUTHORIZED);
+                }
                 return onError(exchange, "Authorization header is missing or invalid", HttpStatus.UNAUTHORIZED);
             }
 
             // Bearer 떼기
-            String token
-                    = authorizationHeader.replace("Bearer ", "");
+            String token = authorizationHeader.replace("Bearer ", "");
 
             // JWT 토큰 유효성 검증 및 클레임 얻어내기
             Claims claims = validateJwt(token);
@@ -83,7 +83,6 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             // 새롭게 만든 (토큰 정보를 헤더에 담은) request를 exchange에 갈아끼워서 보내자.
             // 필터도 통과시키자.
             return chain.filter(exchange.mutate().request(request).build());
-
         };
     }
 
@@ -116,14 +115,5 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             log.error("JWT validation failed: {}", e.getMessage());
             return null;
         }
-
     }
 }
-
-
-
-
-
-
-
-

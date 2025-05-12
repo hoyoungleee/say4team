@@ -3,6 +3,7 @@ package com.playdata.orderingservice.ordering.service;
 import com.playdata.orderingservice.ordering.dto.OrderRequestDto;
 import com.playdata.orderingservice.ordering.dto.OrderResponseDto;
 import com.playdata.orderingservice.ordering.entity.Order;
+import com.playdata.orderingservice.ordering.entity.OrderItem;
 import com.playdata.orderingservice.ordering.entity.OrderStatus;
 import com.playdata.orderingservice.ordering.mapper.OrderMapper;
 import com.playdata.orderingservice.ordering.repository.OrderRepository;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -23,24 +25,34 @@ public class OrderService {
     // 주문을 생성하는 메서드
     // orderRequestDto 주문 요청 DTO
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
-        // DTO를 Entity로 변환 (DB에 저장하기 위해)
-        Order order = orderMapper.toEntity(orderRequestDto);
-
-        // 주문 날짜와 주문 상태를 생성자에서 설정하도록 처리
-        order = Order.builder()
-                .totalPrice(order.getTotalPrice())
+        // DTO -> Entity 변환
+        Order order = Order.builder()
+                .totalPrice(orderRequestDto.getTotalPrice())
                 .orderStatus(OrderStatus.PENDING_USER_FAILURE)
                 .orderedAt(LocalDateTime.now())
-                .userId(order.getUserId())
-                .address(order.getAddress())
-                .orderItems(order.getOrderItems())
+                .userId(orderRequestDto.getUserId())
+                .address(orderRequestDto.getAddress())
                 .build();
 
-        // 주문을 DB에 저장
+        // OrderItem 설정: order 참조를 직접 넣어줘야 함
+        List<OrderItem> orderItems = orderRequestDto.getOrderItems().stream()
+                .map(dto -> OrderItem.builder()
+                        .quantity(dto.getQuantity())
+                        .unitPrice(dto.getUnitPrice())
+                        .productId(dto.getProductId())
+                        .order(order) // 여기! Order 설정
+                        .build())
+                .toList();
+
+        // order에 orderItems 세팅
+        order.setOrderItems(orderItems);
+
+        // 저장
         Order savedOrder = orderRepository.save(order);
-        // 저장된 주문을 DTO로 변환하여 반환
-        return orderMapper.toDto(savedOrder); // 생성된 주문에 대한 응답 DTO
+
+        return orderMapper.toDto(savedOrder);
     }
+
 
     // 주문 조회 메서드
     // orderId 주문 ID
@@ -95,6 +107,27 @@ public class OrderService {
 
         // 변경된 주문에 대한 응답 DTO를 반환
         return orderMapper.toDto(updatedOrder); // 상태가 업데이트된 주문을 DTO로 변환하여 반환
+    }
+
+    // 사용자의 전체 주문 조회 메서드
+    public List<OrderResponseDto> getOrdersByUser(Long userId) {
+        List<Order> orders = orderRepository.findAllByUserId(userId);  // 사용자 ID로 주문 목록 조회
+        return orders.stream()
+                .map(orderMapper::toDto)  // Entity -> DTO로 변환
+                .toList();
+    }
+
+    // 주문 취소 메서드
+    public void deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("해당 주문이 존재하지 않습니다."));
+
+        if (order.getOrderStatus() == OrderStatus.CANCELED) {
+            throw new IllegalStateException("이미 취소된 주문입니다.");
+        }
+
+        order.setOrderStatus(OrderStatus.CANCELED);
+        orderRepository.save(order);
     }
 
 }
