@@ -1,6 +1,8 @@
 package com.playdata.userservice.user.controller;
 
 import com.playdata.userservice.common.auth.JwtTokenProvider;
+import com.playdata.userservice.common.auth.TokenRefreshRequestDto;
+import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonErrorDto;
 import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.user.dto.UserLoginReqDto;
@@ -56,7 +58,11 @@ public class UserController {
      }
      */
     @PostMapping("/create")
-    public ResponseEntity<?> userCreate(@Valid @RequestBody UserSaveReqDto dto) {
+    public ResponseEntity<?> userCreate(@Valid @RequestBody UserSaveReqDto dto,
+                                        @RequestParam(required = false, defaultValue = "user") String role) {
+
+        dto.setRole(role);
+
         // 화면단에서 전달된 데이터를 DB에 넣자.
         // 혹시 이메일이 중복되었는가? -> 이미 이전에 회원가입을 한 회원이라면 거절.
         // dto를 DB에 바로 때려? -> dto를 entity로 바꾸는 로직 추가.
@@ -93,12 +99,12 @@ public class UserController {
 
         // refreshToken을 DB에 저장하자. (redis)
 //        userService.saveRefreshToken(user.getEmail(), refreshToken);
-        redisTemplate.opsForValue().set("user:refresh:" + user.getId(), refreshToken, 2, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set("user:refresh:" + user.getUserId(), refreshToken, 7, TimeUnit.MINUTES);
 
         // Map을 이용해서 사용자의 id와 token을 포장하자.
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("token", token);
-        loginInfo.put("id", user.getId());
+        loginInfo.put("id", user.getUserId());
         loginInfo.put("role", user.getRole().toString());
 
         CommonResDto resDto
@@ -132,29 +138,27 @@ public class UserController {
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
-    // access token이 만료되어 새 토큰을 요청
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> map) {
-        String id = map.get("id");
-        log.info("/user/refresh: POST, id: {}", id);
-        // redis에 해당 id로 조회되는 내용이 있는지 확인
-        Object obj = redisTemplate.opsForValue().get("user:refresh:" + id);
-        log.info("obj: {}", obj);
-        if (obj == null) { // refresh token이 수명이 다됨.
-            return new ResponseEntity<>(new CommonErrorDto(
-                    HttpStatus.UNAUTHORIZED, "EXPIRED_RT"),
-                    HttpStatus.UNAUTHORIZED);
-        }
-        // 새로운 access token을 발급
-        User user = userService.findById(id);
-        String newAccessToken
-                = jwtTokenProvider.createToken(user.getEmail(), user.getRole().toString());
+    @PostMapping("/token/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequestDto requestDto) {
+        try {
+            TokenUserInfo userInfo = jwtTokenProvider.validateAndGetTokenUserInfo(requestDto.getRefreshToken());
+            String savedToken = (String) redisTemplate.opsForValue().get(userInfo.getEmail());
 
-        Map<String, Object> info = new HashMap<>();
-        info.put("token", newAccessToken);
-        CommonResDto resDto
-                = new CommonResDto(HttpStatus.OK, "새 토큰 발급됨", info);
-        return ResponseEntity.ok().body(resDto);
+            if (!requestDto.getRefreshToken().equals(savedToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Refresh Token mismatch");
+            }
+
+            String newAccessToken = jwtTokenProvider.createToken(userInfo.getEmail(), userInfo.getRole().name());
+
+            Map<String, String> tokenMap = new HashMap<>();
+            tokenMap.put("accessToken", newAccessToken);
+            return ResponseEntity.ok(tokenMap);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid Refresh Token: " + e.getMessage());
+        }
     }
 
     // ordering-service가 회원 정보를 원할 때 이메일을 보냅니다.
