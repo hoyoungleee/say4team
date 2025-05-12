@@ -4,7 +4,10 @@ import com.playdata.productservice.common.configs.AwsS3Config;
 import com.playdata.productservice.product.dto.ProductResDto;
 import com.playdata.productservice.product.dto.ProductSaveReqDto;
 import com.playdata.productservice.product.dto.ProductSearchDto;
+import com.playdata.productservice.product.entity.Category;
 import com.playdata.productservice.product.entity.Product;
+import com.playdata.productservice.product.entity.ProductImages;
+import com.playdata.productservice.product.repository.CategoryRepository;
 import com.playdata.productservice.product.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,35 +32,51 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final AwsS3Config s3Config;
 
     public Product productCreate(ProductSaveReqDto dto) throws IOException {
 
-        MultipartFile productImage = dto.getProductImage();
+        MultipartFile mainImage = dto.getMainImage();
+        MultipartFile thumbnailImage = dto.getThumbnailImage();
 
-        // 상품을 등록하는 과정에서, 이미지 이름의 충돌이 발생할 수 있기 때문에
-        // 랜덤한 문자열을 섞어서 파일 중복을 막아주자.
-        String uniqueFileName
-                = UUID.randomUUID() + "_" + productImage.getOriginalFilename();
 
-        /*
-        // 특정 로컬 경로에 이미지를 전송하고, 그 경로를 Entity에 세팅하자.
-        File file
-                = new File("/Users/stephen/Desktop/playdata_8th_develop/upload/" + uniqueFileName);
+        String uniqueMainImageName
+                = UUID.randomUUID() + "_" + mainImage.getOriginalFilename();
+        String uniqueThumbnailImageName
+                = UUID.randomUUID() + "_" + thumbnailImage.getOriginalFilename();
 
-        try {
-            productImage.transferTo(file);
-        } catch (IOException e) {
-            throw new RuntimeException("이미지 저장 실패!");
+        String mainImageUrl
+                = s3Config.uploadToS3Bucket(mainImage.getBytes(), uniqueMainImageName);
+        String thumbnailImageUrl
+                = s3Config.uploadToS3Bucket(thumbnailImage.getBytes(), uniqueThumbnailImageName);
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException("category not found"));
+
+        dto.setMainImagePath(mainImageUrl);
+        dto.setThumbnailPath(thumbnailImageUrl);
+        Product product = dto.toEntity(category);
+
+
+        List<ProductImages> images = new ArrayList<>();
+
+
+        for (int i =0; i<dto.getImages().size(); i++) {
+            MultipartFile image = dto.getImages().get(i);
+            ProductImages productImages = new ProductImages();
+            String uniqueImageName
+                    = UUID.randomUUID() + "_" + image.getOriginalFilename();
+            String imageUrl
+                    = s3Config.uploadToS3Bucket(image.getBytes(), uniqueImageName);
+            productImages.setImgUrl(imageUrl);
+            productImages.setImgOrder(i);
+            productImages.setProduct(product);
+            images.add(productImages);
         }
-        */
 
-        // 더 이상 로컬 경로에 이미지를 저장하지 않고, s3 버킷에 저장
-        String imageUrl
-                = s3Config.uploadToS3Bucket(productImage.getBytes(), uniqueFileName);
+        product.setProductImages(images);
 
-        Product product = dto.toEntity();
-        product.setImagePath(imageUrl); // 파일명이 아닌 S3 오브젝트의 url이 저장될 것이다.
 
         return productRepository.save(product);
 
@@ -64,12 +84,12 @@ public class ProductService {
 
     public List<ProductResDto> productList(ProductSearchDto dto, Pageable pageable) {
         Page<Product> products;
-        if (dto.getCategory() == null) {
+        if (dto.getSearchType() == null) {
             products = productRepository.findAll(pageable);
-        } else if (dto.getCategory().equals("name")) {
+        } else if (dto.getSearchType().equals("name")) {
             products = productRepository.findByNameValue(dto.getSearchName(), pageable);
         } else {
-            products = productRepository.findByCategoryValue(dto.getSearchName(), pageable);
+            products = productRepository.findByCategoryId(dto.getCategoryId(), pageable);
         }
 
         List<Product> productList = products.getContent();
@@ -84,8 +104,15 @@ public class ProductService {
                 () -> new EntityNotFoundException("Product with id: " + id + " not found")
         );
 
-        String imageUrl = product.getImagePath();
-        s3Config.deleteFromS3Bucket(imageUrl);
+        for (ProductImages image : product.getProductImages()) {
+            s3Config.deleteFromS3Bucket(image.getImgUrl());
+        }
+
+
+        String thumbnailPath = product.getThumbnailPath();
+        String mainImagePath = product.getMainImagePath();
+        s3Config.deleteFromS3Bucket(thumbnailPath);
+        s3Config.deleteFromS3Bucket(mainImagePath);
 
         productRepository.deleteById(id);
     }
@@ -94,6 +121,9 @@ public class ProductService {
         Product product = productRepository.findById(prodId).orElseThrow(
                 () -> new EntityNotFoundException("Product with id: " + prodId + " not found")
         );
+
+        //연관 테이블 데이터 명시적으로 불러와서 영속성주기
+        product.getProductImages();
 
         return product.fromEntity();
     }
@@ -107,7 +137,7 @@ public class ProductService {
     }
 
     public List<ProductResDto> getProductsName(List<Long> productIds) {
-        List<Product> products = productRepository.findByIdIn(productIds);
+        List<Product> products = productRepository.findByProductIdIn(productIds);
 
         return products.stream()
                 .map(Product::fromEntity)

@@ -27,7 +27,7 @@ public class ProductContoller {
     private final ProductService productService;
 
     // 상품 등록 요청
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<?> createProduct(ProductSaveReqDto dto)
             throws IOException {
@@ -39,11 +39,11 @@ public class ProductContoller {
         formData로 넘어오는 이미지 파일은 MultipartFile 형태로 받아주시면 됩니다.
         MultipartFile은 이미지의 정보(크기, 원본이름...), 지정된 경로로 파일 전송 기능을 제공합니다.
          */
-        log.info("dto: {}", dto);
+
         Product product = productService.productCreate(dto);
 
         CommonResDto resDto
-                = new CommonResDto(HttpStatus.CREATED, "상품 등록 성공", product.getId());
+                = new CommonResDto(HttpStatus.CREATED, "상품 등록 성공", product.getProductId());
 
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
@@ -52,13 +52,11 @@ public class ProductContoller {
     // 따로 권한은 필요 없습니다. (누구나 요청이 가능합니다. 로그인 안해도 됩니다.)
     // 페이징이 필요합니다. -> 클라이언트 쪽에서 페이지 번호와 한 화면에 보여질 상품 개수, 정렬 방식이 넘어와요.
     // 리턴은 ProductResDto 형태로 리턴됩니다.
-    // ProductResDto(id, name, category, price, stockQuantity, imagePath)
     @GetMapping("/list")
     public ResponseEntity<?> listProduct(ProductSearchDto dto, Pageable pageable) {
         // 페이지 번호를 number로 주시면 안됨! page로 전달해 주셔야 합니다!
         // 사용자가 선택한 페이지 번호 -1을 클라이언트 단에서 해서 전달해 주셔야 합니다.
-        log.info("/product/list: GET, pageable: {}", pageable);
-        log.info("dto: {}", dto);
+
         List<ProductResDto> dtoList = productService.productList(dto, pageable);
 
         CommonResDto resDto
@@ -67,7 +65,7 @@ public class ProductContoller {
         return ResponseEntity.ok().body(resDto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteProduct(@RequestParam("id") Long id) throws Exception {
         log.info("/product/delete: DELETE, id: {}", id);

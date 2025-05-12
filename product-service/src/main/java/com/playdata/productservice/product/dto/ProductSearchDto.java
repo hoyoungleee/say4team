@@ -8,7 +8,8 @@ import lombok.*;
 @Builder
 public class ProductSearchDto {
 
-    private String category;
+    private String searchType;
+    private Long categoryId;
     private String searchName;
 
 }
