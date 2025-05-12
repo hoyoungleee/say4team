@@ -31,7 +31,7 @@ public class OrderMapper {
 
         // Order 객체 생성
         Order order = Order.builder()
-                .userId(userId)
+//                .userId(userId)
                 .totalPrice(dto.getTotalPrice())
                 .orderStatus(orderStatus)
                 .address(dto.getAddress())

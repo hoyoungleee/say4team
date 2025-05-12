@@ -49,13 +49,13 @@ public class OrderController {
         return orderService.getOrder(orderId);
     }
 
-    // 사용자의 전체 주문 조회
+    // 사용자의 전체 주문 조회 (email로 조회)
     @GetMapping("/userOrder")
-    public List<OrderResponseDto> getOrders(@RequestParam Long userId) {
-        log.info("사용자의 전체 주문 조회: {}", userId);
-        return orderService.getOrdersByUser(userId);
+    public List<OrderResponseDto> getOrders(@RequestParam String email) {
+        log.info("사용자의 전체 주문 조회: {}", email);
+        return orderService.getOrdersByEmail(email);
     }
-
+    
     // 주문 상태 업데이트
     @PutMapping("/{orderId}/status")
     public OrderResponseDto updateOrderStatus(

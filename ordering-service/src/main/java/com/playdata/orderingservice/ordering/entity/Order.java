@@ -31,8 +31,8 @@ public class Order {
     @Column(name = "ordered_at")
     private LocalDateTime orderedAt; // 주문일자
 
-    @Column(name = "user_id")
-    private Long userId; // 유저 아이디
+    @Column(name = "email")
+    private String email; // 유저 아이디
 
     @Column(name = "address", nullable = false)
     private String address; // 주소
