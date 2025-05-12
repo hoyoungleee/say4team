@@ -8,7 +8,7 @@ import lombok.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter @ToString
+@Getter  @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

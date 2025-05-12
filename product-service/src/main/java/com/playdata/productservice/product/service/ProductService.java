@@ -4,6 +4,7 @@ import com.playdata.productservice.common.configs.AwsS3Config;
 import com.playdata.productservice.product.dto.ProductResDto;
 import com.playdata.productservice.product.dto.ProductSaveReqDto;
 import com.playdata.productservice.product.dto.ProductSearchDto;
+import com.playdata.productservice.product.dto.ProductUpdateDto;
 import com.playdata.productservice.product.entity.Category;
 import com.playdata.productservice.product.entity.Product;
 import com.playdata.productservice.product.entity.ProductImages;
@@ -153,6 +154,36 @@ public class ProductService {
             foundProd.setStockQuantity(quantity + map.get(key));
             productRepository.save(foundProd);
         }
+    }
+
+    public void productUpdate(ProductUpdateDto dto, Long id) {
+//
+//        Product product = productRepository.findById(id)
+//                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+//
+//        // 텍스트 필드 수정
+//        if (dto.getName() != null) product.setName(dto.getName());
+//        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+//
+//        // 이미지 변경이 있는 경우만 S3 업로드
+//        if (dto.getMainImage() != null && !dto.getMainImage().isEmpty()) {
+//            String url = s3Config.uploadToS3Bucket(dto.getMainImage().getBytes(), uuidFileName(...));
+//            product.setMainImagePath(url);
+//        }
+//
+//        if (dto.getThumbnailImage() != null && !dto.getThumbnailImage().isEmpty()) {
+//            String url = s3Config.uploadToS3Bucket(dto.getThumbnailImage().getBytes(), uuidFileName(...));
+//            product.setThumbnailPath(url);
+//        }
+//
+//        // 상품 상세 이미지도 마찬가지로 분기
+//        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
+//            List<ProductImages> newImages = ... // 기존 삭제 후 재등록 or 추가 로직
+//            product.setProductImages(newImages);
+//        }
+//
+//        return product;
+
     }
 }
 

@@ -4,6 +4,7 @@ import com.playdata.productservice.common.dto.CommonResDto;
 import com.playdata.productservice.product.dto.ProductResDto;
 import com.playdata.productservice.product.dto.ProductSaveReqDto;
 import com.playdata.productservice.product.dto.ProductSearchDto;
+import com.playdata.productservice.product.dto.ProductUpdateDto;
 import com.playdata.productservice.product.entity.Product;
 import com.playdata.productservice.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,18 @@ public class ProductContoller {
 
         CommonResDto resDto
                 = new CommonResDto(HttpStatus.OK, "상품 리스트 정상 조회", dtoList);
+
+        return ResponseEntity.ok().body(resDto);
+    }
+
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateProduct(@RequestParam("id") Long id, ProductUpdateDto dto) throws Exception {
+        log.info("/product/update: UPDATE, id: {} dto:{}", id, dto.toString());
+        productService.productUpdate(dto, id);
+
+        CommonResDto resDto
+                = new CommonResDto(HttpStatus.OK, "삭제 완료", id);
 
         return ResponseEntity.ok().body(resDto);
     }
