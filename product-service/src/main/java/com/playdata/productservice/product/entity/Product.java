@@ -8,7 +8,7 @@ import lombok.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter  @ToString
+@Getter @Setter @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -28,18 +28,16 @@ public class Product extends BaseTimeEntity {
     @JoinColumn(name = "category_id", nullable = false) // 외래키 컬럼명 지정
     private Category category;
 
-    @Setter
+
     private int stockQuantity;
 
-    @Setter // 이미지 경로를 위해서만 setter 세팅
     private String mainImagePath;
-    @Setter
+
     private String thumbnailPath;
 
     private String description;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Setter
     private List<ProductImages> productImages;
 
 

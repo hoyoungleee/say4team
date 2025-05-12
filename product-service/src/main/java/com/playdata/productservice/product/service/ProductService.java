@@ -85,12 +85,20 @@ public class ProductService {
 
     public List<ProductResDto> productList(ProductSearchDto dto, Pageable pageable) {
         Page<Product> products;
-        if (dto.getSearchType() == null) {
-            products = productRepository.findAll(pageable);
-        } else if (dto.getSearchType().equals("name")) {
-            products = productRepository.findByNameValue(dto.getSearchName(), pageable);
+        if (dto.getSearchType() == null || dto.getSearchType().equals("ALL")) {
+            if(!dto.getSearchName().isEmpty()){
+                products = productRepository.findByNameValue(dto.getSearchName(), pageable);
+            }
+            else {
+                products = productRepository.findAll(pageable);
+
+            }
         } else {
-            products = productRepository.findByCategoryId(dto.getCategoryId(), pageable);
+            if(!dto.getSearchName().isEmpty()){
+                products = productRepository.findByNameValueAndCategory_CategoryId(dto.getSearchName(), dto.getCategoryId(), pageable);
+            } else {
+                products = productRepository.findByCategoryId(dto.getCategoryId(), pageable);
+            }
         }
 
         List<Product> productList = products.getContent();
@@ -156,33 +164,74 @@ public class ProductService {
         }
     }
 
-    public void productUpdate(ProductUpdateDto dto, Long id) {
-//
-//        Product product = productRepository.findById(id)
-//                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
-//
-//        // 텍스트 필드 수정
-//        if (dto.getName() != null) product.setName(dto.getName());
-//        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
-//
-//        // 이미지 변경이 있는 경우만 S3 업로드
-//        if (dto.getMainImage() != null && !dto.getMainImage().isEmpty()) {
-//            String url = s3Config.uploadToS3Bucket(dto.getMainImage().getBytes(), uuidFileName(...));
-//            product.setMainImagePath(url);
-//        }
-//
-//        if (dto.getThumbnailImage() != null && !dto.getThumbnailImage().isEmpty()) {
-//            String url = s3Config.uploadToS3Bucket(dto.getThumbnailImage().getBytes(), uuidFileName(...));
-//            product.setThumbnailPath(url);
-//        }
-//
-//        // 상품 상세 이미지도 마찬가지로 분기
-//        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
-//            List<ProductImages> newImages = ... // 기존 삭제 후 재등록 or 추가 로직
-//            product.setProductImages(newImages);
-//        }
-//
-//        return product;
+    public Product productUpdate(ProductUpdateDto dto, Long id) throws Exception {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        // 텍스트 필드 수정
+        if (dto.getName() != null) product.setName(dto.getName());
+        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+        if (dto.getDescription() != null) product.setDescription(dto.getDescription());
+
+        // 이미지 변경이 있는 경우만 S3 업로드
+        if (dto.getMainImage() != null && !dto.getMainImage().isEmpty()) {
+
+            s3Config.deleteFromS3Bucket(product.getMainImagePath());
+
+            MultipartFile mainImage = dto.getMainImage();
+            String uniqueMainImageName
+                    = UUID.randomUUID() + "_" + mainImage.getOriginalFilename();
+            String url =
+                    s3Config.uploadToS3Bucket(mainImage.getBytes(), uniqueMainImageName);
+            product.setMainImagePath(url);
+        }
+
+        if (dto.getThumbnailImage() != null && !dto.getThumbnailImage().isEmpty()) {
+            s3Config.deleteFromS3Bucket(product.getThumbnailPath());
+
+            MultipartFile thumbnailImage = dto.getThumbnailImage();
+            String uniquethumbnailImageName
+                    = UUID.randomUUID() + "_" + thumbnailImage.getOriginalFilename();
+            String url =
+                    s3Config.uploadToS3Bucket(thumbnailImage.getBytes(), uniquethumbnailImageName);
+            product.setThumbnailPath(url);
+        }
+
+        // 상품 상세 이미지도 마찬가지로 분기
+        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
+
+            List<ProductImages> exImages = product.getProductImages();
+            for (int i =0; i<dto.getImages().size(); i++) {
+                String imgUrl = exImages.get(i).getImgUrl();
+                s3Config.deleteFromS3Bucket(imgUrl);
+            }
+
+            List<ProductImages> newImages = new ArrayList<>(); // 기존 삭제 후 재등록 or 추가 로직
+            for (int i = 0; i < dto.getImages().size(); i++) {
+                ProductImages productImages = new ProductImages();
+                MultipartFile image = dto.getImages().get(i);
+                String uniqueImageName
+                        = UUID.randomUUID() + "_" + image.getOriginalFilename();
+                String url =
+                        s3Config.uploadToS3Bucket(image.getBytes(), uniqueImageName);
+                productImages.setImgUrl(url);
+                newImages.add(productImages);
+            }
+            product.setProductImages(newImages);
+        }
+
+        if(dto.getCategoryId() != null && !dto.getCategoryId().isEmpty()) {
+            Long categoryId = Long.parseLong(dto.getCategoryId());
+            Category category= categoryRepository.findById(categoryId).orElseThrow(
+                    () -> new EntityNotFoundException("Category with id: " + categoryId + " not found")
+            );
+            product.setCategory(category);
+        }
+
+
+
+        return productRepository.save(product);
 
     }
 }

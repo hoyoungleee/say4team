@@ -1,5 +1,6 @@
 package com.playdata.productservice.product.dto;
 
+import com.playdata.productservice.product.entity.Category;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,5 +19,6 @@ public class ProductUpdateDto {
     private MultipartFile mainImage;
     private MultipartFile thumbnailImage;
     private List<MultipartFile> images;
+    String categoryId;
 
 }
