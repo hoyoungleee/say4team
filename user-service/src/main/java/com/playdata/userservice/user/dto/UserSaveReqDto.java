@@ -1,6 +1,5 @@
 package com.playdata.userservice.user.dto;
 
-import com.playdata.userservice.common.entity.Address;
 import com.playdata.userservice.user.entity.User;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -19,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Builder
 public class UserSaveReqDto {
 
+    private String role;
+
     private String name;
 
     @NotEmpty(message = "이메일은 필수입니다!")
@@ -28,7 +29,7 @@ public class UserSaveReqDto {
     @Size(min = 8, message = "비밀번호는 최소 8자 이상이어야 합니다.")
     private String password;
 
-    private Address address;
+    private String address;
 
     // dto가 자기가 가지고 있는 필드 정보를 토대로 User Entity를 생성해서 리턴하는 메서드
     public User toEntity(PasswordEncoder encoder) {
