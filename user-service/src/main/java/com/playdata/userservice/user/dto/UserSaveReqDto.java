@@ -1,10 +1,14 @@
 package com.playdata.userservice.user.dto;
 
+import com.playdata.userservice.user.entity.Role;
 import com.playdata.userservice.user.entity.User;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 // 데이터 단순 운반 용도로 사용하는 DTO
 // 프론트 단으로 전달할, 전달받은 데이터는 따로 DTO를 선언하는 것을 권장.
@@ -30,6 +34,8 @@ public class UserSaveReqDto {
     private String password;
 
     private String address;
+    private String phone;
+    private LocalDate birthDate;
 
     // dto가 자기가 가지고 있는 필드 정보를 토대로 User Entity를 생성해서 리턴하는 메서드
     public User toEntity(PasswordEncoder encoder) {
@@ -38,6 +44,10 @@ public class UserSaveReqDto {
                 .email(this.email)
                 .password(encoder.encode(this.password))
                 .address(this.address)
+                .phone(this.phone)
+                .birthDate(this.birthDate)
+                .role(Role.valueOf(this.role.toUpperCase()))
+                .registeredAt(LocalDateTime.now())
                 .build();
     }
 
