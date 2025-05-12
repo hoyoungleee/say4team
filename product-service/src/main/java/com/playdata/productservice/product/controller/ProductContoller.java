@@ -28,7 +28,7 @@ public class ProductContoller {
     private final ProductService productService;
 
     // 상품 등록 요청
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<?> createProduct(ProductSaveReqDto dto)
             throws IOException {
@@ -66,7 +66,7 @@ public class ProductContoller {
         return ResponseEntity.ok().body(resDto);
     }
 
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/update")
     public ResponseEntity<?> updateProduct(@RequestParam("id") Long id, ProductUpdateDto dto) throws Exception {
         log.info("/product/update: UPDATE, id: {} dto:{}", id, dto.toString());
@@ -78,7 +78,7 @@ public class ProductContoller {
         return ResponseEntity.ok().body(resDto);
     }
 
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteProduct(@RequestParam("id") Long id) throws Exception {
         log.info("/product/delete: DELETE, id: {}", id);
