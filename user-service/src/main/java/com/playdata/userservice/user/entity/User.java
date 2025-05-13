@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 // DB에 삽입되는 데이터, DB에서 조회된 데이터는 그 자체로 사용하고 수정되지 않게끔
 // setter를 사용하지 않는 것을 권장.
 @Getter
+@Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,6 +40,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Builder.Default // builder 패턴 사용해서 객체 초기화 시 초기값으로 세팅
     private Role role =  Role.USER;
+
+    @Enumerated(EnumType.STRING)
+    private UserStatus status = UserStatus.ACTIVE;
 
     public boolean isAdmin() {
         return this.role == Role.ADMIN;

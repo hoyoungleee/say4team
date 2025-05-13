@@ -8,6 +8,7 @@ import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.user.dto.UserLoginReqDto;
 import com.playdata.userservice.user.dto.UserResDto;
 import com.playdata.userservice.user.dto.UserSaveReqDto;
+import com.playdata.userservice.user.dto.UserUpdateRequestDto;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.service.UserService;
 import jakarta.validation.Valid;
@@ -137,6 +138,36 @@ public class UserController {
 
         return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
+
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long userId,
+            @RequestBody UserUpdateRequestDto dto
+    ) {
+        User updatedUser = userService.updateUser(userId, dto);
+
+        return ResponseEntity.ok().body(new CommonResDto(
+                HttpStatus.OK,
+                "회원정보가 수정되었습니다.",
+                updatedUser
+        ));
+    }
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(new CommonResDto(
+                HttpStatus.OK, "회원 탈퇴 완료", null
+        ));
+    }
+
+    @PutMapping("/restore/{userId}")
+    public ResponseEntity<?> restoreUser(@PathVariable Long userId) {
+        userService.restoreUser(userId);
+        return ResponseEntity.ok(new CommonResDto(
+                HttpStatus.OK, "회원 복구 완료", null
+        ));
+    }
+
 
     @PostMapping("/token/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequestDto requestDto) {
