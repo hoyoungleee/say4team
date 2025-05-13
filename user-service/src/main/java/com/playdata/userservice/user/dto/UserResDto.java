@@ -1,8 +1,9 @@
 package com.playdata.userservice.user.dto;
 
-import com.playdata.userservice.common.entity.Address;
 import com.playdata.userservice.user.entity.Role;
 import lombok.*;
+
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -12,10 +13,12 @@ import lombok.*;
 @Builder
 public class UserResDto {
 
-    private Long id;
+    private Long userid;
     private String email;
     private String name;
     private Role role;
-    private Address address;
+    private String address;
+    private String phone;
+    private LocalDate birthdate;
 
 }
