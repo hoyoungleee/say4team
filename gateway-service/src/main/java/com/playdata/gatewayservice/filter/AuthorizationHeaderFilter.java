@@ -55,7 +55,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 // 토큰이 존재하지 않거나, Bearer로 시작하지 않는다면
-                if (path.startsWith("/ordering-service/orders/")) {
+                if (path.startsWith("/ordering-service/orders/") || path.startsWith("/ordering-service/cart/") ) {
                     // 주문 관련 경로에서 로그인하지 않았다면 NO_LOGIN 처리
                     return onError(exchange, "NO_LOGIN", HttpStatus.UNAUTHORIZED);
                 }

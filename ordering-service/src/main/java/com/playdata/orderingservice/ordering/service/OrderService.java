@@ -11,6 +11,9 @@ import com.playdata.orderingservice.ordering.entity.OrderItem;
 import com.playdata.orderingservice.ordering.entity.OrderStatus;
 import com.playdata.orderingservice.ordering.mapper.OrderMapper;
 import com.playdata.orderingservice.ordering.repository.OrderRepository;
+import com.playdata.orderingservice.cart.service.CartService;
+import com.playdata.orderingservice.cart.dto.CartItemDto;
+import com.playdata.orderingservice.cart.dto.CartResponseDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +34,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final UserServiceClient userServiceClient;
     private final ProductServiceClient productServiceClient;
+    private final CartService cartService;
 
     // 주문 생성
     public Order createOrder(OrderRequestDto orderRequestDto, TokenUserInfo tokenUserInfo) {
@@ -46,18 +50,22 @@ public class OrderService {
         }
         String address = userResponse.getResult().getAddress();
 
-        // 상품 ID 목록 추출
-        List<Long> productIds = orderRequestDto.getOrderItems().stream()
-                .map(OrderItemDto::getProductId)
-                .toList();
+        // 1. 장바구니 조회
+        CartResponseDto cartResponse = cartService.getCart(tokenUserInfo);
+        List<CartResponseDto.CartItemDetailDto> cartItems = cartResponse.getItems();
 
-        // 상품 정보 조회 (가격 포함)
+        // 2. 상품 ID 목록 추출
+        List<Long> productIds = cartItems.stream()
+                .map(CartResponseDto.CartItemDetailDto::getProductId)
+                .collect(Collectors.toList());
+
+        // 3. 상품 정보 조회 (가격 포함)
         List<ProductResDto> productList = getProductsByIds(productIds);
         Map<Long, ProductResDto> productMap = productList.stream()
                 .collect(Collectors.toMap(ProductResDto::getId, p -> p));
 
-        // 주문 항목 생성
-        List<OrderItem> orderItems = orderRequestDto.getOrderItems().stream()
+        // 4. 주문 항목 생성
+        List<OrderItem> orderItems = cartItems.stream()
                 .map(dto -> {
                     ProductResDto product = productMap.get(dto.getProductId());
                     if (product == null) {
@@ -71,12 +79,12 @@ public class OrderService {
                 })
                 .collect(Collectors.toList());
 
-        // 총 가격 계산
+        // 5. 총 가격 계산
         BigDecimal totalPrice = orderItems.stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 주문 생성
+        // 6. 주문 생성
         Order order = Order.builder()
                 .totalPrice(totalPrice)
                 .orderStatus(OrderStatus.PENDING_USER_FAILURE)
@@ -89,8 +97,32 @@ public class OrderService {
         // 양방향 관계 설정
         orderItems.forEach(item -> item.setOrder(order));
 
-        // 저장
+        // 7. 저장
         orderRepository.save(order);
+
+        // 8. 장바구니 비우기
+        cartService.clearCart(tokenUserInfo);
+
+        // 9. 상품 수량 감소 요청
+        cartItems.forEach(cartItem -> {
+            ProductResDto product = productMap.get(cartItem.getProductId());
+            if (product != null) {
+                int newQuantity = product.getStockQuantity() - cartItem.getQuantity(); // 수량 차감
+                product.setStockQuantity(newQuantity); // 상품 수량 업데이트
+
+                // 상품 수량 업데이트 요청
+                try {
+                    productServiceClient.updateQuantity(product); // 수량 업데이트 호출
+                } catch (Exception e) {
+                    log.error("상품 수량 업데이트 실패: {}", e.getMessage());
+                    throw new RuntimeException("상품 수량 업데이트 실패");
+                }
+            }
+        });
+
+        // 10. 주문 상태 업데이트
+        order.setOrderStatus(OrderStatus.ORDERED); // 주문 완료 상태로 변경
+        orderRepository.save(order); // 변경된 상태 저장
 
         return order;
     }
