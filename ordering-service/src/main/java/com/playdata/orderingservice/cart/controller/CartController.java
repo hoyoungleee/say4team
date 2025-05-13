@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/cart")
 @RequiredArgsConstructor
+//@CrossOrigin(origins = "http://localhost:5173")
+
 public class CartController {
 
     private final CartService cartService;
@@ -39,5 +41,13 @@ public class CartController {
     @DeleteMapping("/clear")
     public void clearCart(@AuthenticationPrincipal TokenUserInfo tokenUserInfo) {
         cartService.clearCart(tokenUserInfo);
+    }
+
+    // 장바구니에서 상품 수량 수정
+    @PatchMapping("/items/{productId}")
+    public CartResponseDto updateItemQuantity(@AuthenticationPrincipal TokenUserInfo tokenUserInfo,
+                                              @PathVariable Long productId,
+                                              @RequestBody CartItemDto dto) {
+        return cartService.updateItemQuantity(productId, dto.getQuantity(), tokenUserInfo);
     }
 }
