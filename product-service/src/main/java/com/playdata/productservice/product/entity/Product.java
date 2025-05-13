@@ -5,7 +5,10 @@ import com.playdata.productservice.product.dto.ProductResDto;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Getter @ToString
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Getter @Setter @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -15,24 +18,45 @@ public class Product extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "product_id" , nullable = false)
+    private Long productId;
 
     private String name;
-    private String category;
     private int price;
-    @Setter
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false) // 외래키 컬럼명 지정
+    private Category category;
+
+
     private int stockQuantity;
-    @Setter // 이미지 경로를 위해서만 setter 세팅
-    private String imagePath;
+
+    @Column(length = 1000)
+    private String mainImagePath;
+    @Column(length = 1000)
+    private String thumbnailPath;
+
+    private String description;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImages> productImages;
+
 
     public ProductResDto fromEntity() {
         return ProductResDto.builder()
-                .id(id)
+                .id(productId)
                 .name(name)
-                .category(category)
+                .categoryName(category.getName())
                 .price(price)
+                .description(description)
                 .stockQuantity(stockQuantity)
-                .imagePath(imagePath)
+                .mainImagePath(mainImagePath)
+                .thumbnailPath(thumbnailPath)
+                .productImages(
+                    this.productImages.stream()
+                            .map(ProductImages::getImgUrl)
+                            .collect(Collectors.toList())
+                )
                 .build();
     }
 

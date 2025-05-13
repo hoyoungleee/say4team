@@ -12,12 +12,10 @@ import lombok.*;
 @Builder
 public class UserResDto {
 
-    private Long id;
+    private Long userId;
     private String email;
     private String name;
-    private Role role;
-    private Address address;
-
-    private boolean dummyFlag;
+    private String phone;
+    private String address;
 
 }
