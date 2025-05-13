@@ -2,10 +2,6 @@ package com.playdata.orderingservice.ordering.dto;
 
 import lombok.*;
 
-import java.math.BigDecimal;
-
-import lombok.*;
-
 import java.util.List;
 
 @Getter @Setter @ToString

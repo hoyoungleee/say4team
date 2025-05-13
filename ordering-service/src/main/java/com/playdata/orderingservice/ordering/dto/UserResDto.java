@@ -4,6 +4,8 @@ import com.playdata.orderingservice.common.auth.Role;
 import com.playdata.orderingservice.common.entity.Address;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @ToString
@@ -12,10 +14,12 @@ import lombok.*;
 @Builder
 public class UserResDto {
 
-    private Long userId;
+    private Long userid;
     private String email;
     private String name;
-    private String phone;
+    private Role role;
     private String address;
+    private String phone;
+    private LocalDate birthdate;
 
 }

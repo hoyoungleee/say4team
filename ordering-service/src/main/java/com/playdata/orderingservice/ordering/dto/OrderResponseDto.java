@@ -21,4 +21,7 @@ public class OrderResponseDto {
     private LocalDateTime orderedAt; // 주문 시각
     private String address; // 배송지 주소
     private List<OrderItemDto> orderItems; // 주문 항목 리스트
+    private String email;
+
+
 }
