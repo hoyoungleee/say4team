@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
 public class OrderItemDto {
     private Long productId;
     private int quantity;
@@ -16,12 +17,4 @@ public class OrderItemDto {
     private String mainImagePath;
     private String categoryName;
 
-    public OrderItemDto(Long productId, int quantity, BigDecimal unitPrice, String productName, String mainImagePath, String categoryName) {
-        this.productId = productId;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
-        this.productName = productName;
-        this.mainImagePath = mainImagePath;
-        this.categoryName = categoryName;
-    }
 }

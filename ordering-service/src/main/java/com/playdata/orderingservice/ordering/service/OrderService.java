@@ -195,7 +195,7 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    // 관리자 여부 확인
+    // 관리자 여부 확인(공통 메서드로 빼놈)
     private boolean isAdmin(TokenUserInfo tokenUserInfo) {
         return Role.ADMIN.equals(tokenUserInfo.getRole());
     }

@@ -73,28 +73,9 @@ public class OrderMapper {
                 .orderStatus(order.getOrderStatus().name())
                 .orderedAt(order.getOrderedAt())
                 .address(order.getAddress())
+                .email(order.getEmail())
                 .orderItems(orderItems)
                 .build();
     }
 
-    // 조회용: 상품 정보 없이 기본 DTO 반환
-    public OrderResponseDto toDto(Order order) {
-        List<OrderItemDto> orderItems = order.getOrderItems().stream()
-                .map(item -> new OrderItemDto(
-                        item.getProductId(),
-                        item.getQuantity(),
-                        item.getUnitPrice(),
-                        null, null, null
-                ))
-                .collect(Collectors.toList());
-
-        return OrderResponseDto.builder()
-                .orderId(order.getOrderId())
-                .totalPrice(order.getTotalPrice())
-                .orderStatus(order.getOrderStatus().name())
-                .orderedAt(order.getOrderedAt())
-                .address(order.getAddress())
-                .orderItems(orderItems)
-                .build();
-    }
 }
