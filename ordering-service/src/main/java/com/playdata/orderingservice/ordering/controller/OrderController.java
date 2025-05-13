@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
@@ -55,7 +56,7 @@ public class OrderController {
         log.info("사용자의 전체 주문 조회: {}", email);
         return orderService.getOrdersByEmail(email);
     }
-    
+
     // 주문 상태 업데이트
     @PutMapping("/{orderId}/status")
     public OrderResponseDto updateOrderStatus(
