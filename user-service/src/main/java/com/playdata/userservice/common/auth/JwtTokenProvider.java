@@ -39,6 +39,9 @@ public class JwtTokenProvider {
             == 서명
         }
      */
+
+
+
     public String createToken(String email, String role){
         // Claims: 페이로드에 들어갈 사용자 정보
         Claims claims = Jwts.claims().setSubject(email);
@@ -49,7 +52,7 @@ public class JwtTokenProvider {
                 .setClaims(claims)
                 .setIssuedAt(now)
                 // 현재 시간 밀리초에 30분을 더한 시간만큼을 만료시간으로 세팅
-                .setExpiration(new Date(now.getTime() + expiration * 60 * 1000))
+                .setExpiration(new Date(now.getTime() + expiration * 100 * 10000))
                 .signWith(SignatureAlgorithm.HS256, secretKey) // 서명을 어떤 알고리즘으로 암호화 할 지
                 .compact();
     }

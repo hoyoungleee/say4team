@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-// 클라이언트가 전송한 토큰을 검사하는 필터
-// 스프링 시큐리티에 등록해서 사용할 겁니다.
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -41,15 +39,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String userEmail = request.getHeader("X-User-Email");
             String userRole = request.getHeader("X-User-Role");
 
-            log.info("userEmail:{} userRole:{}", userEmail, userRole);
-
             if (userEmail != null && userRole != null) {
-                List<SimpleGrantedAuthority> authorityList = new ArrayList<>();
-                authorityList.add(new SimpleGrantedAuthority("ROLE_" + userRole));
+                User user = userRepository.findByEmail(userEmail)
+                        .orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다."));
+
+                if (user.getStatus() != UserStatus.ACTIVE) {
+                    log.warn("비활성화된 계정 접근 차단: {}", userEmail);
+                    response.resetBuffer();  // 스트림 리셋
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"message\": \"탈퇴하거나 정지된 계정입니다.\"}");
+                    response.flushBuffer();
+                    return;
+                }
+
+                // 인증 객체 생성
+                List<SimpleGrantedAuthority> authorityList = List.of(
+                        new SimpleGrantedAuthority("ROLE_" + userRole));
 
                 Authentication auth = new UsernamePasswordAuthenticationToken(
                         new TokenUserInfo(userEmail, Role.valueOf(userRole)),
-                        "",
+                        null,
                         authorityList
                 );
 
@@ -60,26 +70,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         } catch (Exception e) {
             log.warn("JWT 필터 인증 실패: {}", e.getMessage());
-
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.getWriter().write("{ \"message\": \"인증 실패: 잘못된 토큰 또는 사용자 정보\" }");
-        }
-
-        String userEmail = request.getHeader("X-User-Email");
-
-        if (userEmail != null) {
-            User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다."));
-
-            if (user.getStatus() != UserStatus.ACTIVE) {
-                log.warn("비활성화된 계정 접근: {}", userEmail);
-                response.setStatus(HttpStatus.FORBIDDEN.value());
-                response.setContentType("applcation/json;charset=UTF-8");
-                response.getWriter().write("{\"message\": \"탈퇴하거나 정지된 계정입니다.\"}");
-                return;
+            if (!response.isCommitted()) {
+                response.resetBuffer();
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"message\": \"인증 실패: 잘못된 토큰 또는 사용자 정보\"}");
+                response.flushBuffer();
             }
         }
-
     }
 }
 

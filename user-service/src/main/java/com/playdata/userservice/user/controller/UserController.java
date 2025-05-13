@@ -5,10 +5,7 @@ import com.playdata.userservice.common.auth.TokenRefreshRequestDto;
 import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonErrorDto;
 import com.playdata.userservice.common.dto.CommonResDto;
-import com.playdata.userservice.user.dto.UserLoginReqDto;
-import com.playdata.userservice.user.dto.UserResDto;
-import com.playdata.userservice.user.dto.UserSaveReqDto;
-import com.playdata.userservice.user.dto.UserUpdateRequestDto;
+import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.service.UserService;
 import jakarta.validation.Valid;
@@ -22,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,13 +128,16 @@ public class UserController {
 
     // 회원 정보 조회 (마이페이지) -> 로그인 한 회원만이 요청할 수 있습니다.
     // 일반 회원용 정보 조회
-    @GetMapping("/myInfo")
-    public ResponseEntity<?> getMyInfo() {
-        UserResDto dto = userService.myInfo();
-        CommonResDto resDto
-                = new CommonResDto(HttpStatus.OK, "myInfo 조회 성공", dto);
-
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<?> getProfile(@PathVariable("id") String  id) {
+        try {
+            Long userId = Long.parseLong(id);
+            User user = userService.findById(userId);
+            return ResponseEntity.ok().body(user);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("ID 형식이 잘못되었습니다.");
+        }
     }
 
     @PutMapping("/update/{userId}")
@@ -152,12 +153,28 @@ public class UserController {
                 updatedUser
         ));
     }
+
+    @PatchMapping("/address/{userId}")
+    public ResponseEntity<?> updateAddress(
+            @PathVariable Long userId,
+            @RequestBody UserAddressUpdateDto dto
+    ) {
+        User updatedUser = userService.updateUserAddress(userId, dto.getAddress());
+
+        return ResponseEntity.ok().body(new CommonResDto(
+                HttpStatus.OK,
+                "주소가 수정되었습니다.",
+                updatedUser
+        ));
+    }
+
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.ok(new CommonResDto(
-                HttpStatus.OK, "회원 탈퇴 완료", null
+                HttpStatus.OK, "회원 탈퇴 완료", Collections.singletonMap("deleted", true)
         ));
+
     }
 
     @PutMapping("/restore/{userId}")

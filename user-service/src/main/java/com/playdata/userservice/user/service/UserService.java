@@ -10,17 +10,20 @@ import com.playdata.userservice.user.entity.UserStatus;
 import com.playdata.userservice.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service // @Component 해도 되는데 서비스 계층이니깐...
 @RequiredArgsConstructor
 public class UserService {
@@ -103,11 +106,15 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     public void deleteUser(Long userId) {
+        log.info("탈퇴 실행 시작 userId={}", userId);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("회원 없음"));
 
         user.setStatus(UserStatus.DELETED);
         userRepository.save(user);
+
+        log.info("탈퇴 완료: userId={}, status={}", userId, user.getStatus());
     }
 
     public void restoreUser(Long userId) {
@@ -136,10 +143,9 @@ public class UserService {
 
     }
 
-    public User findById(String id) {
-        return userRepository.findById(Long.parseLong(id)).orElseThrow(
-                () -> new EntityNotFoundException("User not found!")
-        );
+    public User findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found!"));
     }
 
     public UserResDto findByEmail(String email) {
@@ -147,6 +153,14 @@ public class UserService {
                 () -> new EntityNotFoundException("User not found!")
         );
         return user.fromEntity();
+    }
+
+    public User updateUserAddress(Long userId, String address) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setAddress(address);
+        return userRepository.save(user);
     }
 }
 
