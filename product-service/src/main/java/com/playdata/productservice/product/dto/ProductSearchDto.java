@@ -8,7 +8,9 @@ import lombok.*;
 @Builder
 public class ProductSearchDto {
 
-    private String category;
+    // ALL 혹은 카테고리 아이디 넘기기
+    private String searchType;
+
     private String searchName;
 
 }
