@@ -45,7 +45,7 @@ public class SecurityConfig {
 //                    .requestMatchers("/user/list").hasRole("ROLE_ADMIN")
                     .requestMatchers("/product/list",
                             "/product/updateQuantity",
-                            "/product/{prodId}",
+                            "/product/detail/{prodId}",
                               "/product/products",
                             "/product/cancel",
                             "/actuator/**").permitAll()
