@@ -41,7 +41,6 @@ public class UserSaveReqDto {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    // dto가 자기가 가지고 있는 필드 정보를 토대로 User Entity를 생성해서 리턴하는 메서드
     public User toEntity(PasswordEncoder encoder) {
         return User.builder()
                 .name(this.name)
