@@ -6,6 +6,10 @@ import com.playdata.userservice.common.auth.TokenUserInfo;
 import com.playdata.userservice.common.dto.CommonErrorDto;
 import com.playdata.userservice.common.dto.CommonResDto;
 import com.playdata.userservice.user.dto.*;
+import com.playdata.userservice.user.dto.UserLoginReqDto;
+import com.playdata.userservice.user.dto.UserResDto;
+import com.playdata.userservice.user.dto.UserSaveReqDto;
+import com.playdata.userservice.user.dto.UserUpdateRequestDto;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.service.UserService;
 import jakarta.validation.Valid;
@@ -153,38 +157,6 @@ public class UserController {
                 updatedUser
         ));
     }
-
-    @PatchMapping("/address/{userId}")
-    public ResponseEntity<?> updateAddress(
-            @PathVariable Long userId,
-            @RequestBody UserAddressUpdateDto dto
-    ) {
-        User updatedUser = userService.updateUserAddress(userId, dto.getAddress());
-
-        return ResponseEntity.ok().body(new CommonResDto(
-                HttpStatus.OK,
-                "주소가 수정되었습니다.",
-                updatedUser
-        ));
-    }
-
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
-        return ResponseEntity.ok(new CommonResDto(
-                HttpStatus.OK, "회원 탈퇴 완료", Collections.singletonMap("deleted", true)
-        ));
-
-    }
-
-    @PutMapping("/restore/{userId}")
-    public ResponseEntity<?> restoreUser(@PathVariable Long userId) {
-        userService.restoreUser(userId);
-        return ResponseEntity.ok(new CommonResDto(
-                HttpStatus.OK, "회원 복구 완료", null
-        ));
-    }
-
 
     @PostMapping("/token/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequestDto requestDto) {

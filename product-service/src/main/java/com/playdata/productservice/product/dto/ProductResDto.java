@@ -17,6 +17,7 @@ public class ProductResDto {
     private String mainImagePath;
     private String thumbnailPath;
     private String description;
+    private Long categoryId;
     private String categoryName; // ← 여기에 category.getName() 결과
 
     private List<String> productImages;
@@ -30,6 +31,7 @@ public class ProductResDto {
                 .stockQuantity(product.getStockQuantity())
                 .mainImagePath(product.getMainImagePath())
                 .thumbnailPath(product.getThumbnailPath())
+                .categoryId(product.getCategory().getCategoryId())
                 .categoryName(product.getCategory().getName())
                 .build();
     }

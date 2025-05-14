@@ -46,6 +46,7 @@ public class Product extends BaseTimeEntity {
         return ProductResDto.builder()
                 .id(productId)
                 .name(name)
+                .categoryId(category.getCategoryId())
                 .categoryName(category.getName())
                 .price(price)
                 .description(description)
