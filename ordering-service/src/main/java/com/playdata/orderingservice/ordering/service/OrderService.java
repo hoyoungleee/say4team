@@ -137,7 +137,9 @@ public class OrderService {
             }
         }
 
-        List<Order> orders = orderRepository.findAllByEmail(email); // 이메일로 주문 조회
+        List<Order> orders = orderRepository.findAllByEmail(email).stream()
+                .filter(order -> order.getOrderStatus() != OrderStatus.CANCELED)
+                .collect(Collectors.toList());
 
         // 모든 주문에서 상품 ID만 추출
         List<Long> productIds = orders.stream()
