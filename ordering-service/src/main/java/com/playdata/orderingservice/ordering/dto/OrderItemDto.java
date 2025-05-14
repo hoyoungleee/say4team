@@ -1,15 +1,20 @@
 package com.playdata.orderingservice.ordering.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
+
 import java.math.BigDecimal;
 
-@Builder
-@Data
+@ToString
+@NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
 public class OrderItemDto {
-    private Long productId;  // 제품 ID
-    private int quantity;    // 수량
-    private BigDecimal unitPrice;  // 제품 가격
+    private Long productId;
+    private int quantity;
+    private BigDecimal unitPrice;
+    private String productName;
+    private String mainImagePath;
+    private String categoryName;
 
-    // unitPrice의 getter가 Lombok @Data 애너테이션에 의해 자동으로 생성됨
 }
