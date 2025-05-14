@@ -68,8 +68,11 @@ public class UserController {
 
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("token", token);
-        loginInfo.put("id", user.getUserId());
+        loginInfo.put("email", user.getEmail());
+        loginInfo.put("phone", user.getPhone());
+        loginInfo.put("address", user.getAddress());
         loginInfo.put("role", user.getRole().toString());
+        loginInfo.put("id", user.getUserId());
 
         CommonResDto resDto
                 = new CommonResDto(HttpStatus.OK,
