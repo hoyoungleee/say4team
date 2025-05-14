@@ -2,6 +2,7 @@ package com.playdata.orderingservice.cart.controller;
 
 import com.playdata.orderingservice.cart.dto.CartItemDto;
 import com.playdata.orderingservice.cart.dto.CartResponseDto;
+import com.playdata.orderingservice.cart.dto.QuantityUpdateDto;
 import com.playdata.orderingservice.cart.service.CartService;
 import com.playdata.orderingservice.common.auth.TokenUserInfo;
 import lombok.RequiredArgsConstructor;
@@ -44,10 +45,12 @@ public class CartController {
     }
 
     // 장바구니에서 상품 수량 수정
-    @PatchMapping("/items/{productId}")
-    public CartResponseDto updateItemQuantity(@AuthenticationPrincipal TokenUserInfo tokenUserInfo,
-                                              @PathVariable Long productId,
-                                              @RequestBody CartItemDto dto) {
+    @PatchMapping("/items/{productId}/quantity")
+    public CartResponseDto updateItemQuantity(
+            @AuthenticationPrincipal TokenUserInfo tokenUserInfo,
+            @PathVariable Long productId,
+            @RequestBody QuantityUpdateDto dto) {
         return cartService.updateItemQuantity(productId, dto.getQuantity(), tokenUserInfo);
     }
+
 }
