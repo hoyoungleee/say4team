@@ -91,7 +91,7 @@ public class ProductContoller {
     }
 
     // 단일 상품 조회
-    @GetMapping("/{prodId}")
+    @GetMapping("/detail/{prodId}")
     public ResponseEntity<?> getProductById(@PathVariable Long prodId) {
         log.info("/product/{}: GET!", prodId);
         ProductResDto dto = productService.getProductInfo(prodId);
