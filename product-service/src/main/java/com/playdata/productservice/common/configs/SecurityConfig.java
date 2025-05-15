@@ -39,7 +39,9 @@ public class SecurityConfig {
                             "/product/detail/*",
                               "/product/products",
                             "/product/cancel",
-                            "/actuator/**").permitAll()
+                            "/actuator/**",
+                            "/review/list/*",
+                            "/review/detail/*").permitAll()
                     .anyRequest().authenticated();
         });
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

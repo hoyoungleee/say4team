@@ -56,6 +56,12 @@ public class OrderController {
         return orderService.getOrdersByEmail(email, userInfo);
     }
 
+    // 사용자의 전체 주문 조회 (email로 조회)
+    @GetMapping("/userOrderServer")
+    public List<OrderResponseDto> getOrdersServer(@RequestParam String email){
+        return orderService.getOrdersByEmailServer(email);
+    }
+
     // 주문 상태 변경
     @PutMapping("/{orderId}/status")
     public OrderResponseDto updateOrderStatus(

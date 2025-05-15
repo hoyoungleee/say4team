@@ -245,4 +245,30 @@ public class OrderService {
 
         return productResponse.getResult(); // 상품 정보 반환
     }
+
+    public List<OrderResponseDto> getOrdersByEmailServer(String email) {
+
+        List<Order> orders = orderRepository.findAllByEmail(email).stream()
+                .filter(order -> order.getOrderStatus() != OrderStatus.CANCELED)
+                .collect(Collectors.toList());
+
+        // 모든 주문에서 상품 ID만 추출
+        List<Long> productIds = orders.stream()
+                .flatMap(order -> order.getOrderItems().stream())
+                .map(OrderItem::getProductId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 상품 정보 조회
+        List<ProductResDto> productList = getProductsByIds(productIds);
+
+        // 상품 정보를 Map으로 변환 (ID -> ProductResDto)
+        Map<Long, ProductResDto> productMap = productList.stream()
+                .collect(Collectors.toMap(ProductResDto::getId, p -> p));
+
+        // 주문 DTO 반환
+        return orders.stream()
+                .map(order -> orderMapper.toDto(order, productMap)) // 상품 정보를 포함하여 변환
+                .collect(Collectors.toList());
+    }
 }
