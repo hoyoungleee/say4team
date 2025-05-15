@@ -31,4 +31,5 @@ public interface ProductServiceClient {
     // 상품 정보를 가져오는 메서드 (단일 상품 조회)
     @GetMapping("/product/{productId}")
     ProductResDto getProductById(@PathVariable Long productId);
+
 }

@@ -8,7 +8,7 @@ spring:
     gateway:
       globalcors:
         cors-configurations:
-          "[/**]": # 모든 경로에 대한 CORS 설정을 시작하겠다.
+          "[/**]":
             allowed-origins:
 
               - "http://localhost:5173" #사용자 프론트 서버
@@ -24,8 +24,8 @@ spring:
             allowed-headers:
               - Content-Type
               - Authorization
-              - X-Requested-With # AJAX 요청임을 표시 (우리가 세팅하는 건 아님)
-            allow-credentials: true # 인증 정보 포함 요청을 허용하겠다.
+              - X-Requested-With
+            allow-credentials: true
 
       default-filters:
         - name: GlobalFilter
@@ -48,10 +48,7 @@ spring:
           predicates:
             - Path=/user-service/**
           filters:
-            # ??? ???? ???? ? ???? ????? ?? ?? ?? ? ???? ?? (?? ??)
             - RemoveRequestHeader=Cookie
-            # ?? ??? ?? ??? ?? ??? ??? ?? -> ????? ?? ?? (??? ??)
-            # ex) /user-service/users/123 -> /users/123? ???? ?? ??.
             - RewritePath=/user-service/(?<segment>.*), /$\{segment}
             - AuthorizationHeaderFilter
 

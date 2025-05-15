@@ -13,9 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
@@ -46,28 +46,34 @@ public class OrderController {
 
     // 주문 조회
     @GetMapping("/{orderId}")
-    public OrderResponseDto getOrder(@PathVariable Long orderId) {
-        return orderService.getOrder(orderId);
+    public OrderResponseDto getOrder(@PathVariable Long orderId, @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        return orderService.getOrder(orderId, userInfo);
     }
 
     // 사용자의 전체 주문 조회 (email로 조회)
     @GetMapping("/userOrder")
-    public List<OrderResponseDto> getOrders(@RequestParam String email) {
-        log.info("사용자의 전체 주문 조회: {}", email);
-        return orderService.getOrdersByEmail(email);
+    public List<OrderResponseDto> getOrders(@RequestParam String email, @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        return orderService.getOrdersByEmail(email, userInfo);
     }
 
-    // 주문 상태 업데이트
+    // 사용자의 전체 주문 조회 (email로 조회)
+    @GetMapping("/userOrderServer")
+    public List<OrderResponseDto> getOrdersServer(@RequestParam String email){
+        return orderService.getOrdersByEmailServer(email);
+    }
+
+    // 주문 상태 변경
     @PutMapping("/{orderId}/status")
     public OrderResponseDto updateOrderStatus(
             @PathVariable Long orderId,
-            @RequestParam String status) {
-        return orderService.updateOrderStatus(orderId, status);
+            @RequestParam String status,
+            @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        return orderService.updateOrderStatus(orderId, status, userInfo);
     }
 
+    // 주문 취소
     @DeleteMapping("/{orderId}/cancel")
-    public void deleteOrder(@PathVariable Long orderId) {
-        log.info("주문 취소 요청: {}", orderId);
-        orderService.deleteOrder(orderId);
+    public void deleteOrder(@PathVariable Long orderId, @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        orderService.deleteOrder(orderId, userInfo);
     }
 }

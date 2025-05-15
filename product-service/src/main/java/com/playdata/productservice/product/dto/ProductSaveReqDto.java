@@ -15,20 +15,20 @@ import java.util.List;
 @Builder
 public class ProductSaveReqDto {
     private String name;
+    private String description;
     private int price;
     private int stockQuantity;
     //그냥 제일 먼저 나올 썸네일 이미지
     private MultipartFile thumbnailImage;
     //호버시 나올 대표이미지
     private MultipartFile mainImage;
+    private List<MultipartFile> images;
 
-    private String description;
+    private Long categoryId; // 사용자가 선택한 카테고리 ID
 
     private String mainImagePath;
     private String thumbnailPath;
-    private Long categoryId; // 사용자가 선택한 카테고리 ID
 
-    private List<MultipartFile> images;
     private List<String> imageUrls;
 
     public Product toEntity(Category category) {

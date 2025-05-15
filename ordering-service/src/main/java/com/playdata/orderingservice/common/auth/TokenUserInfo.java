@@ -11,7 +11,4 @@ public class TokenUserInfo {
     private String email;
     private Role role;
 
-    public Long getUserId() {
-        return null;
-    }
 }

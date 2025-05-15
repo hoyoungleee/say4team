@@ -2,10 +2,6 @@ package com.playdata.orderingservice.ordering.dto;
 
 import lombok.*;
 
-import java.math.BigDecimal;
-
-import lombok.*;
-
 import java.util.List;
 
 @Getter @Setter @ToString
@@ -20,7 +16,7 @@ public class ProductResDto {
     private String mainImagePath;
     private String thumbnailPath;
     private String description;
-    private String categoryName; // ← 여기에 category.getName() 결과
+    private String categoryName;
 
     private List<String> productImages;
 

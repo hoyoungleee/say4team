@@ -25,16 +25,14 @@ public class CustomAuthenticationEntryPoint
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json; charset=UTF-8");
 
-        // Map 생성 및 데이터 추가 (JSON을 간편하게 즉석에서 만들자)
         Map<String, Object> responseMap = new HashMap<>();
         responseMap.put("message", "NO_LOGIN");
         responseMap.put("code", "401");
 
-        // Map을 JSON 문자열로 변환
+
         String jsonString
                 = new ObjectMapper().writeValueAsString(responseMap);
 
-        // JSON 데이터를 응답 객체에 실어서 클라이언트로 바로 응답.
         response.getWriter().write(jsonString);
 
     }
