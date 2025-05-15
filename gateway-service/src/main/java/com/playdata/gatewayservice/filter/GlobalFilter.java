@@ -14,16 +14,12 @@ import reactor.core.publisher.Mono;
 public class GlobalFilter
         extends AbstractGatewayFilterFactory<GlobalFilter.Config> {
 
-    // Filter가 빈으로 등록될 때 부모 클래스의 생성자에게
-    // 이미 정적으로 세팅된 특정 설정값을 전달합니다.
     public GlobalFilter() {
         super(Config.class);
     }
 
     @Override
     public GatewayFilter apply(Config config) {
-        // 부모는 전달받은 설정값을 필터가 동작할 때 (apply가 호출될 때) 사용할 수 있도록
-        // 매개값으로 전달해 줍니다. -> 필터의 동작 등을 제어할 수 있습니다.
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
@@ -45,8 +41,6 @@ public class GlobalFilter
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Config {
-        // 필터 동작을 동적으로 변경하거나 설정하기 위해 사용합니다. (선택 사항)
-        // 필터 동작을 YAML 설정 파일을 통해 외부에서 동적으로 설정할 수 있습니다.
         private String baseMessage;
         private boolean preLogger;
         private boolean postLogger;

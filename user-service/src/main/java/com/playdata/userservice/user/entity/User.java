@@ -54,20 +54,6 @@ public class User {
     @Column(name = "registered_at", nullable = false)
     private LocalDateTime registeredAt;
 
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<Order> orders = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<Review> reviews = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<Qna> qnas = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<Wishlist> wishlists = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    private List<Cart> carts = new ArrayList<>();
 
     public UserResDto fromEntity() {
         return UserResDto.builder()
