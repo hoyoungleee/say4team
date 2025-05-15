@@ -41,6 +41,6 @@ public class Order {
 
     // orphanRemoval = true : 부모 객체에서 자식 객체가 제거되면 자동으로 데이터베이스에서도 삭제됨.
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems; // ex) 1개의 주문 -> 여러 개의 주문 항목
+    private List<OrderItem> orderItems; // 1개의 주문 -> 여러 개의 주문 항목
 
 }

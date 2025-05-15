@@ -25,7 +25,7 @@ public class CartResponseDto {
                     ProductResDto product = productMap.get(item.getProductId());
                     String name = product != null ? product.getName() : "Unknown Product";
                     BigDecimal unitPrice = product != null ? BigDecimal.valueOf(product.getPrice()) : BigDecimal.ZERO;
-                    String imageUrl = product != null ? product.getThumbnailPath() : null; // ✅ 썸네일 경로 추가
+                    String imageUrl = product != null ? product.getThumbnailPath() : null;
 
                     return CartItemDetailDto.builder()
                             .productId(item.getProductId())
@@ -33,7 +33,7 @@ public class CartResponseDto {
                             .quantity(item.getQuantity())
                             .unitPrice(unitPrice)
                             .totalPrice(unitPrice.multiply(BigDecimal.valueOf(item.getQuantity())))
-                            .imageUrl(imageUrl) // ✅ 세팅
+                            .imageUrl(imageUrl)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -49,7 +49,6 @@ public class CartResponseDto {
                 .build();
     }
 
-
     @Data
     @Builder
     public static class CartItemDetailDto {
@@ -58,7 +57,7 @@ public class CartResponseDto {
         private int quantity;
         private BigDecimal unitPrice;
         private BigDecimal totalPrice;
-        private String imageUrl; // ✅ 이미지 URL 필드 추가
+        private String imageUrl;
     }
 
 }

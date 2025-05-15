@@ -20,7 +20,6 @@ public class OrderMapper {
         this.productServiceClient = productServiceClient;
     }
 
-    // (생성 시 사용 X) - 외부에서 단가/주소 처리하므로 이 메서드는 더 이상 사용하지 않아도 됨.
     @Deprecated
     public Order toEntity(OrderRequestDto dto, Long userId) {
         OrderStatus orderStatus = OrderStatus.PENDING_USER_FAILURE;
@@ -40,7 +39,6 @@ public class OrderMapper {
         return order;
     }
 
-    // 이 메서드도 단가 필요하므로 일반적인 상황에선 더 이상 사용하지 않음
     @Deprecated
     private OrderItem toOrderItemEntity(OrderItemDto dto, Order order) {
         return OrderItem.builder()

@@ -78,11 +78,11 @@ public class CartService {
         String email = tokenUserInfo.getEmail();
         Cart cart = cartRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("장바구니가 존재하지 않습니다."));
-        cart.getItems().clear(); // 장바구니 항목을 비웁니다.
-        cartRepository.save(cart); // 변경사항을 DB에 반영
+        cart.getItems().clear(); // 장바구니 항목 비움.
+        cartRepository.save(cart); // 변경사항을 DB에 반영.
     }
 
-    // 수량 업데이트 메서드
+    // 수량 업데이트
     public CartResponseDto updateItemQuantity(Long productId, int quantity, TokenUserInfo tokenUserInfo) {
         String email = tokenUserInfo.getEmail();
         Cart cart = cartRepository.findByEmail(email)
@@ -104,7 +104,8 @@ public class CartService {
         return CartResponseDto.from(savedCart, productMap);
     }
 
-    // ======================== 내부 유틸 ===========================
+
+    /* 공통 메서드 부분 */
 
     private Cart createEmptyCart(String email) {
         return Cart.builder()

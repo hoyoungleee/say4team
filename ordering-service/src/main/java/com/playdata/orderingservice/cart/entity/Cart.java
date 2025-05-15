@@ -17,7 +17,7 @@ public class Cart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long cartId;
+    private Long cartId; // 사용자의 장바구니 Id
 
     private String email;  // 사용자 이메일
 

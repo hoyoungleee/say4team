@@ -21,12 +21,10 @@ public class CircuitDemoController {
     private final UserServiceClient userServiceClient;
     private final CircuitBreakerFactory circuitBreakerFactory;
 
-    // 1. 서킷브레이커 없는 버전
     @GetMapping("/demo/no-circuit")
     public ResponseEntity<List<String>> demoWithoutCircuit() {
         List<String> results = new ArrayList<>();
 
-        // 10번 연속 호출
         for (int i = 0; i < 10; i++) {
             long start = System.currentTimeMillis();
             try {
@@ -42,13 +40,11 @@ public class CircuitDemoController {
         return ResponseEntity.ok(results);
     }
 
-    // 2. 서킷브레이커 있는 버전
     @GetMapping("/demo/with-circuit")
     public ResponseEntity<List<String>> demoWithCircuit() {
         List<String> results = new ArrayList<>();
         CircuitBreaker circuitBreaker = circuitBreakerFactory.create("userService");
 
-        // 10번 연속 호출
         for (int i = 0; i < 10; i++) {
             long start = System.currentTimeMillis();
             try {
