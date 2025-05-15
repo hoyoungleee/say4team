@@ -35,7 +35,7 @@ public class Review extends BaseTimeEntity {
     @Column(name = "user_name", nullable = false)
     private String userName;
 
-    @Column(length = 1000)
+    @Column(length = 1000, nullable = false)
     private String mediaUrl;
 
     public static ReviewResDto fromEntity(Review review) {
