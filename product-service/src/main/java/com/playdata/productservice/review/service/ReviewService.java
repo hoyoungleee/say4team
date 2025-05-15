@@ -39,14 +39,17 @@ public class ReviewService {
     }
 
     public Review reviewCreate(ReviewSaveReqDto dto, String email, String name) throws IOException {
-        MultipartFile reviewImage = dto.getImage();
 
-        String uniqueReviewImageImageName
-                = UUID.randomUUID() + "_" + reviewImage.getOriginalFilename();
 
-        String mainImageUrl
-                = s3Config.uploadToS3Bucket(reviewImage.getBytes(), uniqueReviewImageImageName);
+        String mainImageUrl = "";
+        if(dto.getImage() != null) {
+            MultipartFile reviewImage = dto.getImage();
 
+            String uniqueReviewImageImageName
+                    = UUID.randomUUID() + "_" + reviewImage.getOriginalFilename();
+            mainImageUrl = s3Config.uploadToS3Bucket(reviewImage.getBytes(), uniqueReviewImageImageName);
+
+        }
         Review review = dto.toEntity(email, name, mainImageUrl);
 
         return reviewRepository.save(review);

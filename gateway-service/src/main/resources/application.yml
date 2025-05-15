@@ -12,7 +12,8 @@ spring:
             allowed-origins:
 
               - "http://localhost:5173" #사용자 프론트 서버
-              - "http://localhost:9090" #관리자 프론트 서버
+              - "http://localhost:9090" #관리자 프론트 로컬 서버
+              - "http://playdata-orderservice4908.s3-website.ap-northeast-2.amazonaws.com" #AWS 정적 서버
 
             allowed-methods:
               - GET
