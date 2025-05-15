@@ -18,7 +18,7 @@ public class ProductResDto {
     private String thumbnailPath;
     private String description;
     private Long categoryId;
-    private String categoryName; // ← 여기에 category.getName() 결과
+    private String categoryName;
 
     private List<String> productImages;
 
