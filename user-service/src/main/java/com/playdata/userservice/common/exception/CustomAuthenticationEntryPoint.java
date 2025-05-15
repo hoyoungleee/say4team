@@ -18,7 +18,10 @@ public class CustomAuthenticationEntryPoint
         implements AuthenticationEntryPoint {
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         AuthenticationException authException)
+            throws IOException, ServletException {
         System.out.println("커스텀 예외 핸들링 클래스의 메서드 호출!");
         System.out.println(authException.getMessage());
 
