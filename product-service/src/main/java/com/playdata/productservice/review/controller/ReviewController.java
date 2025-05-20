@@ -139,7 +139,13 @@ public class ReviewController {
         if(!userEmail.equals(authorEmail)) {
             return ResponseEntity.badRequest().body("글 주인 다름");
         }else{
-            reviewService.deleteById(reviewId, byId.getMediaUrl());
+            if(byId.getMediaUrl()!=null && !byId.getMediaUrl().equals("")) {
+
+                reviewService.deleteById(reviewId, byId.getMediaUrl());
+            }else {
+                reviewService.deleteById(reviewId);
+            }
+
             return ResponseEntity.ok().body("리뷰 삭제 성공");
         }
     }
