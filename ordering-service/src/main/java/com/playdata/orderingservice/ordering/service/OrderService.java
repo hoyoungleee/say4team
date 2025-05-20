@@ -25,6 +25,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.playdata.orderingservice.cart.dto.CartItemDetailDto;
+
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -52,20 +55,32 @@ public class OrderService {
 
         // 1. 장바구니 조회
         CartResponseDto cartResponse = cartService.getCart(tokenUserInfo);
-        List<CartResponseDto.CartItemDetailDto> cartItems = cartResponse.getItems();
+        List<CartResponseDto.CartItemDetailDto> allCartItems = cartResponse.getItems();
 
-        // 2. 상품 ID 목록 추출
-        List<Long> productIds = cartItems.stream()
+        // 2. 요청된 cartItemIds만 필터링
+        List<Long> selectedCartItemIds = orderRequestDto.getCartItemIds();
+
+        // null 체크 추가
+        if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {
+            throw new IllegalArgumentException("선택된 장바구니 아이템이 없습니다.");
+        }
+
+        List<CartResponseDto.CartItemDetailDto> selectedCartItems = allCartItems.stream()
+                .filter(item -> selectedCartItemIds.contains(item.getCartItemId()))
+                .collect(Collectors.toList());
+
+        // 3. 상품 ID 목록 추출
+        List<Long> productIds = selectedCartItems.stream()
                 .map(CartResponseDto.CartItemDetailDto::getProductId)
                 .collect(Collectors.toList());
 
-        // 3. 상품 정보 조회 (가격 포함)
+        // 4. 상품 정보 조회 (가격 포함)
         List<ProductResDto> productList = getProductsByIds(productIds);
         Map<Long, ProductResDto> productMap = productList.stream()
                 .collect(Collectors.toMap(ProductResDto::getId, p -> p));
 
-        // 4. 주문 항목 생성
-        List<OrderItem> orderItems = cartItems.stream()
+        // 5. 주문 항목 생성
+        List<OrderItem> orderItems = selectedCartItems.stream()
                 .map(dto -> {
                     ProductResDto product = productMap.get(dto.getProductId());
                     if (product == null) {
@@ -79,12 +94,12 @@ public class OrderService {
                 })
                 .collect(Collectors.toList());
 
-        // 5. 총 가격 계산
+        // 6. 총 가격 계산
         BigDecimal totalPrice = orderItems.stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 6. 주문 생성
+        // 7. 주문 생성
         Order order = Order.builder()
                 .totalPrice(totalPrice)
                 .orderStatus(OrderStatus.PENDING_USER_FAILURE)
@@ -97,14 +112,15 @@ public class OrderService {
         // 양방향 관계 설정
         orderItems.forEach(item -> item.setOrder(order));
 
-        // 7. 저장
+        // 8. 저장
         orderRepository.save(order);
 
-        // 8. 장바구니 비우기
-        cartService.clearCart(tokenUserInfo);
+        // 9. 장바구니에서 주문한 아이템만 삭제
+        cartService.removeCartItems(tokenUserInfo, selectedCartItemIds);
 
-        // 9. 상품 수량 감소 요청
-        cartItems.forEach(cartItem -> {
+
+        // 10. 상품 수량 감소 요청
+        selectedCartItems.forEach(cartItem -> {
             ProductResDto product = productMap.get(cartItem.getProductId());
             if (product != null) {
                 int newQuantity = product.getStockQuantity() - cartItem.getQuantity(); // 수량 차감
@@ -120,12 +136,13 @@ public class OrderService {
             }
         });
 
-        // 10. 주문 상태 업데이트
+        // 11. 주문 상태 업데이트
         order.setOrderStatus(OrderStatus.ORDERED); // 주문 완료 상태로 변경
         orderRepository.save(order); // 변경된 상태 저장
 
         return order;
     }
+
 
     // 사용자 전체 주문 조회
     public List<OrderResponseDto> getOrdersByEmail(String email, TokenUserInfo tokenUserInfo) throws AccessDeniedException {

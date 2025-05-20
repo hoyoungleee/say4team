@@ -28,6 +28,7 @@ public class CartResponseDto {
                     String imageUrl = product != null ? product.getThumbnailPath() : null;
 
                     return CartItemDetailDto.builder()
+                            .cartItemId(item.getId())       // cartItemId 필드 세팅 (엔티티 PK 필드명에 맞춰서 변경 가능)
                             .productId(item.getProductId())
                             .productName(name)
                             .quantity(item.getQuantity())
@@ -52,6 +53,7 @@ public class CartResponseDto {
     @Data
     @Builder
     public static class CartItemDetailDto {
+        private Long cartItemId;    // 추가됨
         private Long productId;
         private String productName;
         private int quantity;

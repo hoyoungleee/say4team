@@ -1,16 +1,18 @@
 package com.playdata.orderingservice.ordering.entity;
 
+import com.playdata.orderingservice.ordering.entity.Order;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Builder
-@ToString(exclude = {"order", "product"})
+@ToString(exclude = {"order"})
 @Table(name = "order_items")
 public class OrderItem {
 
@@ -29,6 +31,6 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order; // 주문아이디
 
-    @JoinColumn
+    @Column(name = "product_id", nullable = false)
     private Long productId; // 상품아이디
 }

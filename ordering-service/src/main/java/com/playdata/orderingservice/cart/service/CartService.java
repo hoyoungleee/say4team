@@ -4,12 +4,15 @@ import com.playdata.orderingservice.cart.dto.CartItemDto;
 import com.playdata.orderingservice.cart.dto.CartResponseDto;
 import com.playdata.orderingservice.cart.entity.Cart;
 import com.playdata.orderingservice.cart.entity.CartItem;
+import com.playdata.orderingservice.cart.repository.CartItemRepository;
 import com.playdata.orderingservice.cart.repository.CartRepository;
 import com.playdata.orderingservice.client.ProductServiceClient;
+import com.playdata.orderingservice.client.UserServiceClient;
 import com.playdata.orderingservice.common.auth.TokenUserInfo;
 import com.playdata.orderingservice.common.dto.CommonResDto;
 import com.playdata.orderingservice.ordering.dto.ProductResDto;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,8 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final ProductServiceClient productServiceClient;
+    private final CartItemRepository cartItemRepository; // CartItem 엔티티 관리 저장소
+    private final UserServiceClient userServiceClient; // 필요하면 사용자 확인용
 
     // 장바구니 조회
     public CartResponseDto getCart(TokenUserInfo tokenUserInfo) {
@@ -81,6 +86,19 @@ public class CartService {
         cart.getItems().clear(); // 장바구니 항목 비움.
         cartRepository.save(cart); // 변경사항을 DB에 반영.
     }
+
+    // 장바구니에서 cartItemIds에 해당하는 아이템만 삭제하는 로직
+    @Transactional
+    public void removeCartItems(TokenUserInfo tokenUserInfo, List<Long> cartItemIds) {
+        String userEmail = tokenUserInfo.getEmail();
+        Cart cart = cartRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("장바구니가 존재하지 않습니다."));
+
+        cart.getItems().removeIf(item -> cartItemIds.contains(item.getId()));
+        cartRepository.save(cart);
+    }
+
+
 
     // 수량 업데이트
     public CartResponseDto updateItemQuantity(Long productId, int quantity, TokenUserInfo tokenUserInfo) {

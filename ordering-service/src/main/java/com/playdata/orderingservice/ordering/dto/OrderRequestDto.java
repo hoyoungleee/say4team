@@ -8,5 +8,6 @@ import java.util.List;
 
 @Data
 public class OrderRequestDto {
-    private List<OrderItemDto> orderItems;
+    private List<Long> cartItemIds; // 선택된 카트 아이템 ID만 전달
 }
+
