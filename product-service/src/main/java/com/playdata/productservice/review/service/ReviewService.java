@@ -67,6 +67,9 @@ public class ReviewService {
         s3Config.deleteFromS3Bucket(imgUrl);
         reviewRepository.deleteById(reviewId);
     }
+    public void deleteById(Long reviewId) throws Exception {
+        reviewRepository.deleteById(reviewId);
+    }
 
     public void updateById(Long reviewId, String imgUrl, ReviewUpdateDto dto) throws Exception {
         Review review = reviewRepository.findById(reviewId)
