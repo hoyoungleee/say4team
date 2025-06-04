@@ -24,6 +24,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    // 주문 생성
     @PostMapping("/create")
     public ResponseEntity<?> createOrder(
             @AuthenticationPrincipal TokenUserInfo userInfo, // 로그인된 사용자 정보

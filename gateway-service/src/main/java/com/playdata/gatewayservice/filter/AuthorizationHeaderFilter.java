@@ -31,7 +31,9 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/user/create", "/user/doLogin", "/user/refresh",
             "/product/list", "/user/health-check","/product/detail/*",
             "/review/list/*",
-            "/review/detail/*"
+            "/review/detail/*",
+            "/ordering-service/subscribe",
+            "/ordering-service/subscribe/**"
     );
 
     @Override
