@@ -288,4 +288,32 @@ public class OrderService {
                 .map(order -> orderMapper.toDto(order, productMap)) // 상품 정보를 포함하여 변환
                 .collect(Collectors.toList());
     }
+
+    
+    // 관리자 페이지 전용 주문 관리 기능
+    public List<OrderResponseDto> getAllOrders(TokenUserInfo userInfo) throws AccessDeniedException {
+        if (!isAdmin(userInfo)) {
+            throw new AccessDeniedException("관리자만 전체 주문을 조회할 수 있습니다.");
+        }
+
+        List<Order> orders = orderRepository.findAll().stream()
+                .filter(order -> order.getOrderStatus() != OrderStatus.CANCELED)
+                .collect(Collectors.toList());
+
+        List<Long> productIds = orders.stream()
+                .flatMap(order -> order.getOrderItems().stream())
+                .map(OrderItem::getProductId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<ProductResDto> productList = getProductsByIds(productIds);
+
+        Map<Long, ProductResDto> productMap = productList.stream()
+                .collect(Collectors.toMap(ProductResDto::getId, p -> p));
+
+        return orders.stream()
+                .map(order -> orderMapper.toDto(order, productMap))
+                .collect(Collectors.toList());
+    }
+
 }

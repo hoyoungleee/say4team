@@ -77,4 +77,12 @@ public class OrderController {
     public void deleteOrder(@PathVariable Long orderId, @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
         orderService.deleteOrder(orderId, userInfo);
     }
+
+    // 관리자용: 전체 사용자 주문 전체 조회
+    @GetMapping("/admin/all")
+    public List<OrderResponseDto> getAllOrders(@AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        return orderService.getAllOrders(userInfo);
+    }
+
+
 }
