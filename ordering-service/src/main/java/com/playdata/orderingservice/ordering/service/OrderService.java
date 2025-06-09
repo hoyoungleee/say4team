@@ -10,6 +10,7 @@ import com.playdata.orderingservice.ordering.entity.Order;
 import com.playdata.orderingservice.ordering.entity.OrderItem;
 import com.playdata.orderingservice.ordering.entity.OrderStatus;
 import com.playdata.orderingservice.ordering.mapper.OrderMapper;
+import com.playdata.orderingservice.ordering.repository.OrderItemRepository;
 import com.playdata.orderingservice.ordering.repository.OrderRepository;
 import com.playdata.orderingservice.cart.service.CartService;
 import com.playdata.orderingservice.cart.dto.CartItemDto;
@@ -26,6 +27,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.playdata.orderingservice.cart.dto.CartItemDetailDto;
+import com.playdata.orderingservice.ordering.entity.OrderStatus;
+import com.playdata.orderingservice.ordering.repository.OrderRepository;
 
 
 @Service
@@ -38,6 +41,7 @@ public class OrderService {
     private final UserServiceClient userServiceClient;
     private final ProductServiceClient productServiceClient;
     private final CartService cartService;
+    private final OrderItemRepository orderItemRepository;
 
     // 주문 생성
     public Order createOrder(OrderRequestDto orderRequestDto, TokenUserInfo tokenUserInfo) {
@@ -138,6 +142,8 @@ public class OrderService {
 
         // 11. 주문 상태 업데이트
         order.setOrderStatus(OrderStatus.ORDERED); // 주문 완료 상태로 변경
+        // ✅ 각 orderItem의 상태도 변경
+        orderItems.forEach(item -> item.setOrderStatus(OrderStatus.ORDERED));
         orderRepository.save(order); // 변경된 상태 저장
 
         return order;
@@ -289,7 +295,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    
+
     // 관리자 페이지 전용 주문 관리 기능
     public List<OrderResponseDto> getAllOrders(TokenUserInfo userInfo) throws AccessDeniedException {
         if (!isAdmin(userInfo)) {
@@ -314,6 +320,58 @@ public class OrderService {
         return orders.stream()
                 .map(order -> orderMapper.toDto(order, productMap))
                 .collect(Collectors.toList());
+    }
+
+    public OrderResponseDto updateOrderItemStatus(Long orderItemId, String status, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
+        // 1. 주문 항목 조회
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 주문 항목이 존재하지 않습니다. ID: " + orderItemId));
+
+        // 2. 주문 가져오기
+        Order order = orderItem.getOrder();
+
+        // 3. 권한 체크 (관리자 또는 본인 주문인지)
+        if (!isAdmin(tokenUserInfo) && !order.getEmail().equals(tokenUserInfo.getEmail())) {
+            throw new AccessDeniedException("자기 자신의 주문 항목만 변경할 수 있습니다.");
+        }
+
+        // 4. 주문 상태 유효성 검사 및 Enum 변환
+        OrderStatus newStatus;
+        try {
+            newStatus = OrderStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("잘못된 주문 상태입니다: " + status);
+        }
+
+        // 5. 이미 같은 상태일 경우 예외 처리 (선택사항)
+        if (orderItem.getOrderStatus() == newStatus) {
+            throw new IllegalStateException("이미 해당 상태로 설정되어 있습니다.");
+        }
+
+        // 6. 주문 항목 상태 변경
+        orderItem.setOrderStatus(newStatus);
+        orderItemRepository.save(orderItem);
+
+        // 7. 전체 주문 상태 업데이트 로직 (예: 모든 항목 취소시 주문 상태도 변경)
+        boolean allCanceled = order.getOrderItems().stream()
+                .allMatch(item -> item.getOrderStatus() == OrderStatus.CANCELED);
+
+        if (allCanceled) {
+            order.setOrderStatus(OrderStatus.CANCELED);
+            orderRepository.save(order);
+        }
+
+        // 8. 변경된 주문 정보를 반환 (상품 정보 포함)
+        List<Long> productIds = order.getOrderItems().stream()
+                .map(OrderItem::getProductId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<ProductResDto> productList = getProductsByIds(productIds);
+        Map<Long, ProductResDto> productMap = productList.stream()
+                .collect(Collectors.toMap(ProductResDto::getId, p -> p));
+
+        return orderMapper.toDto(order, productMap);
     }
 
 }

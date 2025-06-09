@@ -24,7 +24,7 @@ public class OrderItem {
     @Column(nullable = false)
     private int quantity; // 주문 수량
 
-    @Column(name = "unit_price", precision = 10, scale = 2)
+    @Column(name = "unit_price", precision = 20, scale = 2)
     private BigDecimal unitPrice; // 주문당시상품가격
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,4 +33,10 @@ public class OrderItem {
 
     @Column(name = "product_id", nullable = false)
     private Long productId; // 상품아이디
+
+    @Setter
+    @Column(name = "order_item_status")
+    @Enumerated(EnumType.STRING)
+    private OrderStatus orderStatus = OrderStatus.ORDERED;
+
 }

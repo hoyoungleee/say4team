@@ -20,7 +20,7 @@ public class Order {
     @Column(name = "order_id")
     private Long orderId; // 주문아이디
 
-    @Column(name = "total_price", precision = 10, scale = 2)
+    @Column(name = "total_price", precision = 20, scale = 2)
     private BigDecimal totalPrice; // 총결제금액
 
     // 전달받은 상태로 설정

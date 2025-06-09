@@ -24,34 +24,37 @@ public class OrderMapper {
         // 주문 상태 기본값 설정
         OrderStatus orderStatus = OrderStatus.PENDING_USER_FAILURE;
 
-        // cartItemIds 로부터 주문 항목(orderItemsFromCart)을 이미 조회했다고 가정
+        // cartItemIds 로부터 주문 항목(orderItemsFromCart)을 이미 조회했다고 가정함
         // 따라서 DTO에서 직접 변환하지 않고 외부에서 orderItems를 받음
 
         Order order = Order.builder()
-                .totalPrice(null) // 가격은 서비스에서 계산할 것
+                .totalPrice(null)
                 .orderStatus(orderStatus)
-                .address(null) // 주소는 외부에서 주입할 것 (예: UserService)
+                .address(null)
                 .orderItems(orderItemsFromCart)
                 .build();
 
-        orderItemsFromCart.forEach(item -> item.setOrder(order));
+        orderItemsFromCart.forEach(item -> {
+            item.setOrder(order);
+            item.setOrderStatus(OrderStatus.ORDERED);
+        });
         return order;
     }
 
-    // 기존 toOrderItemEntity 등은 Deprecated 상태로 유지하거나 삭제 가능
-
-    // 조회용 메서드는 그대로 둠
+    // 조회용 메서드
     public OrderResponseDto toDto(Order order, Map<Long, ProductResDto> productMap) {
         List<OrderItemDto> orderItems = order.getOrderItems().stream()
                 .map(item -> {
                     ProductResDto product = productMap.get(item.getProductId());
                     return new OrderItemDto(
+                            item.getOrderItemId(),
                             item.getProductId(),
                             item.getQuantity(),
                             item.getUnitPrice(),
                             product != null ? product.getName() : null,
                             product != null ? product.getMainImagePath() : null,
-                            product != null ? product.getCategoryName() : null
+                            product != null ? product.getCategoryName() : null,
+                            item.getOrderStatus().name()
                     );
                 })
                 .collect(Collectors.toList());

@@ -84,5 +84,13 @@ public class OrderController {
         return orderService.getAllOrders(userInfo);
     }
 
+    // 주문 상세(상품) 상태 변경 (관리자용)
+    @PutMapping("/items/{orderItemId}/status")
+    public OrderResponseDto updateOrderItemStatus(
+            @PathVariable Long orderItemId,
+            @RequestParam String status,
+            @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        return orderService.updateOrderItemStatus(orderItemId, status, userInfo);
+    }
 
 }
