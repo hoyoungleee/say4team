@@ -71,7 +71,7 @@ public class ReviewService {
         reviewRepository.deleteById(reviewId);
     }
 
-    public void updateById(Long reviewId, String imgUrl, ReviewUpdateDto dto) throws Exception {
+    public void updateById(Long reviewId, ReviewUpdateDto dto) throws Exception {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("리뷰 없음"));
 
@@ -82,7 +82,9 @@ public class ReviewService {
 
         // 이미지가 있을 경우 기존 삭제 + 새 이미지 등록
         if (dto.getImage() != null && !dto.getImage().isEmpty()) {
-            s3Config.deleteFromS3Bucket(imgUrl); // 기존 이미지 삭제
+            if(review.getMediaUrl() != null && !review.getMediaUrl().trim().isEmpty()) {
+                s3Config.deleteFromS3Bucket(review.getMediaUrl()); // 기존 이미지 삭제
+            }
             String newImageUrl = s3Config.uploadToS3Bucket(
                     dto.getImage().getBytes(),
                     UUID.randomUUID() + "_" + dto.getImage().getOriginalFilename()
