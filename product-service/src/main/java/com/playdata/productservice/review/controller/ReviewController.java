@@ -126,7 +126,7 @@ public class ReviewController {
         if(!userEmail.equals(authorEmail)) {
             return ResponseEntity.badRequest().body("글 주인 다름");
         }else{
-            reviewService.updateById(reviewId, mediaUrl, dto);
+            reviewService.updateById(reviewId, dto);
             return ResponseEntity.ok().body("리뷰 수정 성공");
         }
     }
