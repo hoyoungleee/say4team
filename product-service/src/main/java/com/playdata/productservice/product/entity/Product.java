@@ -1,5 +1,6 @@
 package com.playdata.productservice.product.entity;
 
+import com.playdata.productservice.category.entity.Category;
 import com.playdata.productservice.common.entity.BaseTimeEntity;
 import com.playdata.productservice.product.dto.ProductResDto;
 import jakarta.persistence.*;
@@ -47,7 +48,7 @@ public class Product extends BaseTimeEntity {
                 .id(productId)
                 .name(name)
                 .categoryId(category.getCategoryId())
-                .categoryName(category.getName())
+                .categoryName(category.getCategoryName())
                 .price(price)
                 .description(description)
                 .stockQuantity(stockQuantity)

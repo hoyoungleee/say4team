@@ -1,14 +1,14 @@
 package com.playdata.productservice.product.service;
 
+import com.playdata.productservice.category.entity.Category;
+import com.playdata.productservice.category.repository.CategoryRepository;
 import com.playdata.productservice.common.configs.AwsS3Config;
 import com.playdata.productservice.product.dto.ProductResDto;
 import com.playdata.productservice.product.dto.ProductSaveReqDto;
 import com.playdata.productservice.product.dto.ProductSearchDto;
 import com.playdata.productservice.product.dto.ProductUpdateDto;
-import com.playdata.productservice.product.entity.Category;
 import com.playdata.productservice.product.entity.Product;
 import com.playdata.productservice.product.entity.ProductImages;
-import com.playdata.productservice.product.repository.CategoryRepository;
 import com.playdata.productservice.product.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +52,7 @@ public class ProductService {
         String thumbnailImageUrl
                 = s3Config.uploadToS3Bucket(thumbnailImage.getBytes(), uniqueThumbnailImageName);
 
-        Category category = categoryRepository.findById(dto.getCategoryId())
+        Category category = categoryRepository.findByCategoryId(dto.getCategoryId())
                 .orElseThrow(() -> new EntityNotFoundException("category not found"));
 
         dto.setMainImagePath(mainImageUrl);

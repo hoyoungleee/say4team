@@ -28,7 +28,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     private String secretKey;
 
     private final List<String> allowUrl = Arrays.asList(
-            "/user/create", "/user/doLogin", "/user/refresh",
+            "/user/create", "/user/doLogin", "/user/refresh", "/user/email-valid", "/user/verify", "/user/kakao", "/user/health-check",
             "/product/list", "/user/health-check","/product/detail/*",
             "/review/list/*",
             "/review/detail/*",
