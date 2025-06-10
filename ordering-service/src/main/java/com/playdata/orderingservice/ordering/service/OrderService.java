@@ -144,7 +144,6 @@ public class OrderService {
         return order;
     }
 
-
     // 사용자 전체 주문 조회
     public List<OrderResponseDto> getOrdersByEmail(String email, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
         // 관리자 권한 체크
@@ -218,6 +217,26 @@ public class OrderService {
             throw new IllegalStateException("이미 취소된 주문입니다.");
         }
 
+        // 1. 주문 항목별 상품ID와 수량을 Map에 담아서 재고 수량 증가 요청
+        Map<Long, Integer> cancelMap = new HashMap<>();
+        for (OrderItem item : order.getOrderItems()) {
+            cancelMap.put(item.getProductId(), item.getQuantity());
+        }
+
+        try {
+            productServiceClient.cancelProduct(cancelMap);
+        } catch (Exception e) {
+            log.error("상품 재고 수량 증가 실패: {}", e.getMessage());
+            throw new RuntimeException("상품 재고 수량 증가 실패");
+        }
+
+        // 2. 주문 항목 상태 모두 CANCELED로 변경 및 저장
+        for (OrderItem item : order.getOrderItems()) {
+            item.setOrderStatus(OrderStatus.CANCELED);
+            orderItemRepository.save(item);
+        }
+
+        // 3. 주문 상태 CANCELED로 변경 및 저장
         order.setOrderStatus(OrderStatus.CANCELED);
         orderRepository.save(order);
     }
@@ -248,8 +267,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-
-
+    // 개별 상품 취소
     public OrderResponseDto updateOrderItemStatus(Long orderItemId, String status, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
         // 1. 주문 항목 조회
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
@@ -271,7 +289,7 @@ public class OrderService {
             throw new IllegalArgumentException("잘못된 주문 상태입니다: " + status);
         }
 
-        // 5. 이미 같은 상태일 경우 예외 처리 (선택사항)
+        // 5. 이미 같은 상태일 경우 예외 처리
         if (orderItem.getOrderStatus() == newStatus) {
             throw new IllegalStateException("이미 해당 상태로 설정되어 있습니다.");
         }
@@ -280,8 +298,24 @@ public class OrderService {
         orderItem.setOrderStatus(newStatus);
         orderItemRepository.save(orderItem);
 
+        // 6-1. 주문 상품이 취소 상태로 변경되면 재고 수량 증가 처리
+        if (newStatus == OrderStatus.CANCELED) {
+            Map<Long, Integer> cancelMap = new HashMap<>();
+            cancelMap.put(orderItem.getProductId(), orderItem.getQuantity());
+
+            try {
+                productServiceClient.cancelProduct(cancelMap);
+            } catch (Exception e) {
+                log.error("상품 재고 수량 증가 실패: {}", e.getMessage());
+                throw new RuntimeException("상품 재고 수량 증가 실패");
+            }
+        }
+
         // 7. 전체 주문 상태 업데이트 로직 (예: 모든 항목 취소시 주문 상태도 변경)
-        boolean allCanceled = order.getOrderItems().stream()
+        // 최신 상태로 주문 항목 리스트를 DB에서 다시 조회
+        List<OrderItem> orderItems = orderItemRepository.findByOrderOrderId(order.getOrderId());
+
+        boolean allCanceled = orderItems.stream()
                 .allMatch(item -> item.getOrderStatus() == OrderStatus.CANCELED);
 
         if (allCanceled) {
@@ -290,7 +324,7 @@ public class OrderService {
         }
 
         // 8. 변경된 주문 정보를 반환 (상품 정보 포함)
-        List<Long> productIds = order.getOrderItems().stream()
+        List<Long> productIds = orderItems.stream()
                 .map(OrderItem::getProductId)
                 .distinct()
                 .collect(Collectors.toList());
