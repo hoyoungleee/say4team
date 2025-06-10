@@ -1,7 +1,6 @@
-package com.playdata.userservice.user.dto;
+package com.playdata.productservice.category.dto;
 
-import com.playdata.userservice.user.entity.Role;
-import jakarta.persistence.Column;
+import com.playdata.productservice.category.entity.Role;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -21,12 +20,5 @@ public class UserResDto {
     private String address;
     private String phone;
     private LocalDate birthdate;
-
-
-    private String profileImage;
-
-
-    private String socialProvider;
-
 
 }

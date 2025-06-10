@@ -32,7 +32,7 @@ public class ProductResDto {
                 .mainImagePath(product.getMainImagePath())
                 .thumbnailPath(product.getThumbnailPath())
                 .categoryId(product.getCategory().getCategoryId())
-                .categoryName(product.getCategory().getName())
+                .categoryName(product.getCategory().getCategoryName())
                 .build();
     }
 }
