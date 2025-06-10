@@ -17,10 +17,26 @@ public class CartController {
 
     private final CartService cartService;
 
-    // 장바구니 조회
+    // 사용자 -> 장바구니 조회
     @GetMapping("/details")
     public CartResponseDto getCart(@AuthenticationPrincipal TokenUserInfo tokenUserInfo) {
         return cartService.getCart(tokenUserInfo);
+    }
+
+    // 사용자 -> 장바구니에서 상품 수량 수정
+    @PatchMapping("/items/{productId}/quantity")
+    public CartResponseDto updateItemQuantity(
+            @AuthenticationPrincipal TokenUserInfo tokenUserInfo,
+            @PathVariable Long productId,
+            @RequestBody QuantityUpdateDto dto) {
+        return cartService.updateItemQuantity(productId, dto.getQuantity(), tokenUserInfo);
+    }
+
+    // 사용자 -> 장바구니에서 상품 삭제
+    @DeleteMapping("/items/{productId}")
+    public CartResponseDto removeItem(@AuthenticationPrincipal TokenUserInfo tokenUserInfo,
+                                      @PathVariable Long productId) {
+        return cartService.removeItemFromCart(productId, tokenUserInfo);
     }
 
     // 장바구니에 상품 추가
@@ -30,26 +46,10 @@ public class CartController {
         return cartService.addItemToCart(dto, tokenUserInfo);
     }
 
-    // 장바구니에서 상품 제거
-    @DeleteMapping("/items/{productId}")
-    public CartResponseDto removeItem(@AuthenticationPrincipal TokenUserInfo tokenUserInfo,
-                                      @PathVariable Long productId) {
-        return cartService.removeItemFromCart(productId, tokenUserInfo);
-    }
-
     // 장바구니 비우기
     @DeleteMapping("/clear")
     public void clearCart(@AuthenticationPrincipal TokenUserInfo tokenUserInfo) {
         cartService.clearCart(tokenUserInfo);
-    }
-
-    // 장바구니에서 상품 수량 수정
-    @PatchMapping("/items/{productId}/quantity")
-    public CartResponseDto updateItemQuantity(
-            @AuthenticationPrincipal TokenUserInfo tokenUserInfo,
-            @PathVariable Long productId,
-            @RequestBody QuantityUpdateDto dto) {
-        return cartService.updateItemQuantity(productId, dto.getQuantity(), tokenUserInfo);
     }
 
 }
