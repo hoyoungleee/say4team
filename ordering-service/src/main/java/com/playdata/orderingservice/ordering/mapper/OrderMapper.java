@@ -1,10 +1,7 @@
 package com.playdata.orderingservice.ordering.mapper;
 
-import com.playdata.orderingservice.client.ProductServiceClient;
 import com.playdata.orderingservice.ordering.dto.*;
 import com.playdata.orderingservice.ordering.entity.Order;
-import com.playdata.orderingservice.ordering.entity.OrderItem;
-import com.playdata.orderingservice.ordering.entity.OrderStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
