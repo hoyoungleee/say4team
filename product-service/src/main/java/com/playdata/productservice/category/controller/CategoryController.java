@@ -35,13 +35,10 @@ public class CategoryController {
 //        ResponseEntity<?> userdata = userServiceClient.getUserByEmail(email, token);
 
     @GetMapping("/list")
-    public ResponseEntity<?> getAllProductCategory(@AuthenticationPrincipal TokenUserInfo tokenUserInfo) {
-        if(!tokenUserInfo.getRole().equals("ADMIN")) {
-            return ResponseEntity.badRequest().body("권한이 없습니다.");
-        }
-        List<CategoryResDto> productCategorys = categoryService.getAllProductCategory();
-        if(productCategorys.size() == 0) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("카테고리가 없습니다.");
+    public ResponseEntity<?> getAllProductCategory(Pageable pageable) {
+        List<CategoryResDto> productCategorys = categoryService.getAllProductCategory(pageable);
+        if(productCategorys.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("카테고리가 없습니다.");
         }
 
         return ResponseEntity.ok(productCategorys);
@@ -49,12 +46,12 @@ public class CategoryController {
 
     @GetMapping("/detail/{categoryId}")
     public ResponseEntity<?> getDetailProductCategory(@AuthenticationPrincipal TokenUserInfo tokenUserInfo, @PathVariable String categoryId) {
-        if(!tokenUserInfo.getRole().equals("ADMIN")) {
+        if(!tokenUserInfo.getRole().toString().equals("ADMIN")) {
             return ResponseEntity.badRequest().body("권한이 없습니다.");
         }
         CategoryResDto productCategory = categoryService.getDetailProductCategory(categoryId);
         if(productCategory == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("카테고리가 없습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("카테고리가 없습니다.");
         }
 
         return ResponseEntity.ok(productCategory);
@@ -62,8 +59,8 @@ public class CategoryController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<?> createProductCategory( @AuthenticationPrincipal TokenUserInfo tokenUserInfo, @RequestBody CategorySaveReqDto dto){
-        if(!tokenUserInfo.getRole().equals("ADMIN")) {
+    public ResponseEntity<?> createProductCategory( @AuthenticationPrincipal TokenUserInfo tokenUserInfo, @ModelAttribute CategorySaveReqDto dto){
+        if(!tokenUserInfo.getRole().toString().equals("ADMIN")) {
             return ResponseEntity.badRequest().body("권한이 없습니다.");
         }
         try {
@@ -77,8 +74,8 @@ public class CategoryController {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateProductCategory( @AuthenticationPrincipal TokenUserInfo tokenUserInfo, @RequestBody CategoryUpdateDto dto){
-        if(!tokenUserInfo.getRole().equals("ADMIN")) {
+    public ResponseEntity<?> updateProductCategory( @AuthenticationPrincipal TokenUserInfo tokenUserInfo, @ModelAttribute CategoryUpdateDto dto){
+        if(tokenUserInfo == null || !tokenUserInfo.getRole().toString().equals("ADMIN")) {
             return ResponseEntity.badRequest().body("권한이 없습니다.");
         }
         try {

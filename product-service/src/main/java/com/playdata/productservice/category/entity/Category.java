@@ -13,7 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "tbl_review")
+@Table(name = "tbl_categories")
 public class Category extends BaseTimeEntity {
 
     //카테고리 아이디
