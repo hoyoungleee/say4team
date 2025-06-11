@@ -40,6 +40,9 @@ public class SecurityConfig {
                             "/user/refresh",
                             "/user/findByEmail",
                             "/user/health-check",
+                            "/user/email-valid",
+                            "/user/verify",
+                            "/user/kakao",
                             "/actuator/**").permitAll()
                     .anyRequest().authenticated();
         });

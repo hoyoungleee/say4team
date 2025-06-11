@@ -25,7 +25,7 @@ public class User {
     @Column(length = 50, nullable = false)
     private String name;
 
-    @Column(nullable = false, length = 255)
+    @Column( length = 255, nullable = true)
     private String password;
 
     @Column(unique = true, nullable = false, length = 100)
@@ -45,14 +45,24 @@ public class User {
         return this.role == Role.ADMIN;
     }
 
-    @Column(length = 20,nullable = false, name = "phone")
+    @Column(length = 20, name = "phone", nullable = true)
     private String phone;
 
-    @Column(name = "birth_date", nullable = false)
+    @Column(name = "birth_date", nullable = true)
     private LocalDate birthDate;
 
     @Column(name = "registered_at", nullable = false)
     private LocalDateTime registeredAt;
+
+
+    @Column
+    private String socialId;
+
+    @Column
+    private String profileImage;
+
+    @Column
+    private String socialProvider;
 
 
     public UserResDto fromEntity() {
@@ -62,6 +72,8 @@ public class User {
                 .email(email)
                 .role(role)
                 .address(address)
+                .profileImage(profileImage)
+                .socialProvider(socialProvider)
                 .phone(phone)
                 .birthdate(birthDate)
                 .build();

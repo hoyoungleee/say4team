@@ -33,7 +33,8 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/review/list/*",
             "/review/detail/*",
             "/ordering-service/subscribe",
-            "/ordering-service/subscribe/**"
+            "/ordering-service/subscribe/**",
+            "/user/kakao"
     );
 
     @Override

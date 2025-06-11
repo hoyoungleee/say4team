@@ -5,6 +5,11 @@ spring:
   application:
     name: user-service
 
+  # 카카오 로그인용 데이터
+oauth2:
+  kakao:
+    client-id: 4f0f7cf5b817e22393af777ffe440547
+    redirect-uri: http://localhost:8000/user-service/user/kakao
 
 
 
