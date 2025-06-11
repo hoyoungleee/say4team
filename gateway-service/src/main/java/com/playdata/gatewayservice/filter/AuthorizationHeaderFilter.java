@@ -32,7 +32,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             "/product/list", "/user/health-check","/product/detail/*",
             "/review/list/*",
             "/review/detail/*",
-            "/category/list/*",
+            "/category/list",
             "/ordering-service/subscribe",
             "/ordering-service/subscribe/**"
     );

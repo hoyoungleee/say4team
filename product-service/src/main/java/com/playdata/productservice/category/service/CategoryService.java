@@ -9,6 +9,7 @@ import com.playdata.productservice.common.configs.AwsS3Config;
 import com.playdata.productservice.review.entity.Review;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,9 +26,9 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final AwsS3Config s3Config;
 
-    public List<CategoryResDto> getAllProductCategory() {
+    public List<CategoryResDto> getAllProductCategory(Pageable pageable) {
 
-        List<CategoryResDto> categoryList = categoryRepository.findAll()
+        List<CategoryResDto> categoryList = categoryRepository.findAll(pageable)
                 .stream().map(Category::fromEntity).collect(Collectors.toList());
 
         return categoryList;

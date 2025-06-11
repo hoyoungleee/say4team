@@ -42,6 +42,14 @@ public class Product extends BaseTimeEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImages> productImages;
 
+    public void decreaseQuantity(Long quantity){
+        if (this.stockQuantity - quantity < 0) {
+            throw new RuntimeException("재고는 0 미만이 될 수 없어요!");
+        }
+        this.stockQuantity -= quantity;
+    }
+
+
 
     public ProductResDto fromEntity() {
         return ProductResDto.builder()
