@@ -332,7 +332,7 @@ public class UserService {
 
     }
 
-    public UserResDto findOrCreateKakaoUser(KakaoUserDto dto) {
+    public UserResDto findOrCreateKakaoUser(KakaoUserDto dto, String clientType) {
         //카카오 ID로 기존 사용자 찾기
 
         Optional<User> existingUser = userRepository.findBySocialProviderAndSocialId("KAKAO", dto.getId().toString());
@@ -341,19 +341,36 @@ public class UserService {
             User foundUser = existingUser.get();
             return foundUser.fromEntity();
         }else{ // 처음 로그인 한사람이면 -> 새로 사용자 생성
-            User kakao = User.builder()
-                    .email(dto.getAccount().getEmail())
-                    .name(dto.getProperties().getNickname())
-                    .profileImage(dto.getProperties().getProfileImage())
-                    .role(Role.ADMIN)
-                    .socialProvider("KAKAO")
-                    .socialId(dto.getId().toString())
-                    .password(null)// 외부 로그인이라 정보없음.
-                    .address(null) // 필요하다면 따로 페이지 만들기
-                    .registeredAt(LocalDateTime.now())
-                    .build();
-            User saved = userRepository.save(kakao);
-            return saved.fromEntity();
+            if(clientType.equals("admin")){
+                User kakao = User.builder()
+                        .email(dto.getAccount().getEmail())
+                        .name(dto.getProperties().getNickname())
+                        .profileImage(dto.getProperties().getProfileImage())
+                        .role(Role.ADMIN)
+                        .socialProvider("KAKAO")
+                        .socialId(dto.getId().toString())
+                        .password(null)// 외부 로그인이라 정보없음.
+                        .address(null) // 필요하다면 따로 페이지 만들기
+                        .registeredAt(LocalDateTime.now())
+                        .build();
+                User saved = userRepository.save(kakao);
+                return saved.fromEntity();
+            }else {
+                User kakao = User.builder()
+                        .email(dto.getAccount().getEmail())
+                        .name(dto.getProperties().getNickname())
+                        .profileImage(dto.getProperties().getProfileImage())
+                        .role(Role.USER)
+                        .socialProvider("KAKAO")
+                        .socialId(dto.getId().toString())
+                        .password(null)// 외부 로그인이라 정보없음.
+                        .address(null) // 필요하다면 따로 페이지 만들기
+                        .registeredAt(LocalDateTime.now())
+                        .build();
+                User saved = userRepository.save(kakao);
+                return saved.fromEntity();
+            }
+
         }
     }
 }
