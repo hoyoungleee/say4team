@@ -105,24 +105,34 @@ public class CategoryService {
         return ResponseEntity.ok().body("카테고리 수정완료.");
     }
 
-    public ResponseEntity<?> deleteProductCategory(String categoryId) {
-        Category findCategory = categoryRepository.findByCategoryId(Long.parseLong(categoryId))
-                .orElseThrow(() -> new IllegalArgumentException("해당 카테고리가 존재하지 않습니다."));
-
-        String categoryBgImgUrl = findCategory.getCategoryBgImgUrl();
+    public ResponseEntity<String> deleteProductCategories(List<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("삭제할 카테고리 ID가 제공되지 않았습니다.");
+        }
 
         try {
-            s3Config.deleteFromS3Bucket(categoryBgImgUrl);
-            categoryRepository.deleteById(Long.parseLong(categoryId));
-        }catch (IOException e){
+            for (Long categoryId : categoryIds) {
+                Category findCategory = categoryRepository.findByCategoryId(categoryId)
+                        .orElseThrow(() -> new IllegalArgumentException(categoryId + "번 카테고리가 존재하지 않습니다."));
+
+                String categoryBgImgUrl = findCategory.getCategoryBgImgUrl();
+
+                if (categoryBgImgUrl != null && !categoryBgImgUrl.isEmpty()) {
+                    s3Config.deleteFromS3Bucket(categoryBgImgUrl);
+                }
+                categoryRepository.deleteById(categoryId);
+            }
+            return ResponseEntity.ok().body("데이터 삭제 완료.");
+        } catch (IllegalArgumentException e) {
+            // Specific exception for category not found
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body("데이터 삭제 실패.");
-        }
-        catch (Exception e) {
+            return ResponseEntity.internalServerError().body("S3 이미지 삭제 중 오류가 발생했습니다. " + e.getMessage());
+        } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body("예상치 못한 에러. 관리자에게 문의바랍니다.");
+            return ResponseEntity.internalServerError().body("예상치 못한 에러가 발생했습니다. 관리자에게 문의 바랍니다.");
         }
-        return ResponseEntity.ok().body("데이터 삭제 완료.");
     }
 
     public CategoryResDto getDetailProductCategory(String categoryId) {

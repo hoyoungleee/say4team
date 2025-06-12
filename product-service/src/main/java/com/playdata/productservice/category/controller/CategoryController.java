@@ -73,7 +73,7 @@ public class CategoryController {
         }
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ResponseEntity<?> updateProductCategory( @AuthenticationPrincipal TokenUserInfo tokenUserInfo, @ModelAttribute CategoryUpdateDto dto){
         if(tokenUserInfo == null || !tokenUserInfo.getRole().toString().equals("ADMIN")) {
             return ResponseEntity.badRequest().body("권한이 없습니다.");
@@ -88,18 +88,26 @@ public class CategoryController {
         }
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteProductCategory(@AuthenticationPrincipal TokenUserInfo tokenUserInfo, String categoryId){
-        if(!tokenUserInfo.getRole().equals("ADMIN")) {
+    @DeleteMapping("/delete") // <-- URL에 PathVariable이 없으므로 이렇게 변경합니다.
+    public ResponseEntity<?> deleteProductCategories( // 메서드 이름도 복수형으로 변경 (선택 사항)
+                                                      @AuthenticationPrincipal TokenUserInfo tokenUserInfo,
+                                                      @RequestBody CategoryDeleteRequestDto requestDto) { // <-- @RequestBody로 DTO를 받습니다.
+
+        if (!tokenUserInfo.getRole().toString().equals("ADMIN")) {
             return ResponseEntity.badRequest().body("권한이 없습니다.");
         }
-        try {
-            ResponseEntity<?> productCategory = categoryService.deleteProductCategory(categoryId);
 
-            return productCategory;
-        }catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("요청이 정상적으로 처리되지 못했습니다..");
+        try {
+            // DTO에서 ID 목록을 가져와 서비스 계층으로 전달합니다.
+            categoryService.deleteProductCategories(requestDto.getCategoryIds());
+
+            // 성공 응답 반환
+            // 200 OK와 함께 메시지를 보내거나, 204 No Content를 반환할 수 있습니다.
+            return ResponseEntity.ok("선택된 카테고리가 성공적으로 삭제되었습니다.");
+            // 또는 return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 응답 본문 없음
+        } catch (Exception e) {
+            log.error("카테고리 삭제 실패: {}", e.getMessage(), e); // 스택 트레이스를 포함하여 로깅
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("요청이 정상적으로 처리되지 못했습니다.");
         }
     }
 

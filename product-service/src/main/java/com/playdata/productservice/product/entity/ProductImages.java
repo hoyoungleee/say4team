@@ -10,7 +10,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @Table(name = "product_images")
-public class ProductImages {
+public class    ProductImages {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
