@@ -1,7 +1,5 @@
 package com.playdata.productservice.review.dto;
 
-import com.playdata.productservice.product.entity.Category;
-import com.playdata.productservice.product.entity.Product;
 import com.playdata.productservice.review.entity.Review;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;

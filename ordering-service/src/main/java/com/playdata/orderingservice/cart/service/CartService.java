@@ -4,10 +4,8 @@ import com.playdata.orderingservice.cart.dto.CartItemDto;
 import com.playdata.orderingservice.cart.dto.CartResponseDto;
 import com.playdata.orderingservice.cart.entity.Cart;
 import com.playdata.orderingservice.cart.entity.CartItem;
-import com.playdata.orderingservice.cart.repository.CartItemRepository;
 import com.playdata.orderingservice.cart.repository.CartRepository;
 import com.playdata.orderingservice.client.ProductServiceClient;
-import com.playdata.orderingservice.client.UserServiceClient;
 import com.playdata.orderingservice.common.auth.TokenUserInfo;
 import com.playdata.orderingservice.common.dto.CommonResDto;
 import com.playdata.orderingservice.ordering.dto.ProductResDto;
@@ -25,8 +23,6 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final ProductServiceClient productServiceClient;
-    private final CartItemRepository cartItemRepository; // CartItem 엔티티 관리 저장소
-    private final UserServiceClient userServiceClient; // 필요하면 사용자 확인용
 
     // 장바구니 조회
     public CartResponseDto getCart(TokenUserInfo tokenUserInfo) {
@@ -121,7 +117,6 @@ public class CartService {
         Map<Long, ProductResDto> productMap = getProductMap(savedCart);
         return CartResponseDto.from(savedCart, productMap);
     }
-
 
     /* 공통 메서드 부분 */
 

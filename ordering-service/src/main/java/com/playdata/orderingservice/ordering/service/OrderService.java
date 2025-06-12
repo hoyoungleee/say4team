@@ -13,7 +13,6 @@ import com.playdata.orderingservice.ordering.mapper.OrderMapper;
 import com.playdata.orderingservice.ordering.repository.OrderItemRepository;
 import com.playdata.orderingservice.ordering.repository.OrderRepository;
 import com.playdata.orderingservice.cart.service.CartService;
-import com.playdata.orderingservice.cart.dto.CartItemDto;
 import com.playdata.orderingservice.cart.dto.CartResponseDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +24,6 @@ import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import com.playdata.orderingservice.cart.dto.CartItemDetailDto;
-import com.playdata.orderingservice.ordering.entity.OrderStatus;
-import com.playdata.orderingservice.ordering.repository.OrderRepository;
 
 
 @Service
@@ -142,13 +137,12 @@ public class OrderService {
 
         // 11. 주문 상태 업데이트
         order.setOrderStatus(OrderStatus.ORDERED); // 주문 완료 상태로 변경
-        // ✅ 각 orderItem의 상태도 변경
+        // 각 orderItem의 상태도 변경
         orderItems.forEach(item -> item.setOrderStatus(OrderStatus.ORDERED));
         orderRepository.save(order); // 변경된 상태 저장
 
         return order;
     }
-
 
     // 사용자 전체 주문 조회
     public List<OrderResponseDto> getOrdersByEmail(String email, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
@@ -209,32 +203,7 @@ public class OrderService {
         return orderMapper.toDto(order, productMap); // 상품 정보를 포함하여 변환
     }
 
-    // 주문 상태 업데이트
-    public OrderResponseDto updateOrderStatus(Long orderId, String status, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
-        // 관리자 권한 체크
-        if (!isAdmin(tokenUserInfo)) {
-            throw new AccessDeniedException("관리자만 주문 상태를 변경할 수 있습니다.");
-        }
-
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("주문을 찾을 수 없습니다. 주문 ID: " + orderId));
-
-        // 주문 상태 값이 유효한지 확인
-        OrderStatus orderStatus;
-        try {
-            orderStatus = OrderStatus.valueOf(status); // 문자열을 Enum으로 변환
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("잘못된 주문 상태입니다: " + status);
-        }
-
-        // 상태 업데이트
-        order.setOrderStatus(orderStatus);
-        orderRepository.save(order);
-
-        return getOrder(orderId, tokenUserInfo); // 변경 후 최신 데이터 반환
-    }
-
-    // 주문 취소
+    // 사용자 전체 주문 취소
     public void deleteOrder(Long orderId, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 주문이 존재하지 않습니다."));
@@ -248,53 +217,29 @@ public class OrderService {
             throw new IllegalStateException("이미 취소된 주문입니다.");
         }
 
+        // 1. 주문 항목별 상품ID와 수량을 Map에 담아서 재고 수량 증가 요청
+        Map<Long, Integer> cancelMap = new HashMap<>();
+        for (OrderItem item : order.getOrderItems()) {
+            cancelMap.put(item.getProductId(), item.getQuantity());
+        }
+
+        try {
+            productServiceClient.cancelProduct(cancelMap);
+        } catch (Exception e) {
+            log.error("상품 재고 수량 증가 실패: {}", e.getMessage());
+            throw new RuntimeException("상품 재고 수량 증가 실패");
+        }
+
+        // 2. 주문 항목 상태 모두 CANCELED로 변경 및 저장
+        for (OrderItem item : order.getOrderItems()) {
+            item.setOrderStatus(OrderStatus.CANCELED);
+            orderItemRepository.save(item);
+        }
+
+        // 3. 주문 상태 CANCELED로 변경 및 저장
         order.setOrderStatus(OrderStatus.CANCELED);
         orderRepository.save(order);
     }
-
-    // 관리자 여부 확인(공통 메서드로 빼놈)
-    private boolean isAdmin(TokenUserInfo tokenUserInfo) {
-        return Role.ADMIN.equals(tokenUserInfo.getRole());
-    }
-
-    // 상품 정보를 여러 개 조회하는 공통 메서드
-    private List<ProductResDto> getProductsByIds(List<Long> productIds) {
-        // 여러 상품 정보 조회
-        CommonResDto<List<ProductResDto>> productResponse = productServiceClient.getProducts(productIds);
-
-        if (productResponse == null || productResponse.getResult() == null) {
-            throw new RuntimeException("상품 정보 조회 실패");
-        }
-
-        return productResponse.getResult(); // 상품 정보 반환
-    }
-
-    public List<OrderResponseDto> getOrdersByEmailServer(String email) {
-
-        List<Order> orders = orderRepository.findAllByEmail(email).stream()
-                .filter(order -> order.getOrderStatus() != OrderStatus.CANCELED)
-                .collect(Collectors.toList());
-
-        // 모든 주문에서 상품 ID만 추출
-        List<Long> productIds = orders.stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .map(OrderItem::getProductId)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // 상품 정보 조회
-        List<ProductResDto> productList = getProductsByIds(productIds);
-
-        // 상품 정보를 Map으로 변환 (ID -> ProductResDto)
-        Map<Long, ProductResDto> productMap = productList.stream()
-                .collect(Collectors.toMap(ProductResDto::getId, p -> p));
-
-        // 주문 DTO 반환
-        return orders.stream()
-                .map(order -> orderMapper.toDto(order, productMap)) // 상품 정보를 포함하여 변환
-                .collect(Collectors.toList());
-    }
-
 
     // 관리자 페이지 전용 주문 관리 기능
     public List<OrderResponseDto> getAllOrders(TokenUserInfo userInfo) throws AccessDeniedException {
@@ -322,6 +267,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    // 개별 상품 취소
     public OrderResponseDto updateOrderItemStatus(Long orderItemId, String status, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
         // 1. 주문 항목 조회
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
@@ -343,7 +289,7 @@ public class OrderService {
             throw new IllegalArgumentException("잘못된 주문 상태입니다: " + status);
         }
 
-        // 5. 이미 같은 상태일 경우 예외 처리 (선택사항)
+        // 5. 이미 같은 상태일 경우 예외 처리
         if (orderItem.getOrderStatus() == newStatus) {
             throw new IllegalStateException("이미 해당 상태로 설정되어 있습니다.");
         }
@@ -352,8 +298,24 @@ public class OrderService {
         orderItem.setOrderStatus(newStatus);
         orderItemRepository.save(orderItem);
 
+        // 6-1. 주문 상품이 취소 상태로 변경되면 재고 수량 증가 처리
+        if (newStatus == OrderStatus.CANCELED) {
+            Map<Long, Integer> cancelMap = new HashMap<>();
+            cancelMap.put(orderItem.getProductId(), orderItem.getQuantity());
+
+            try {
+                productServiceClient.cancelProduct(cancelMap);
+            } catch (Exception e) {
+                log.error("상품 재고 수량 증가 실패: {}", e.getMessage());
+                throw new RuntimeException("상품 재고 수량 증가 실패");
+            }
+        }
+
         // 7. 전체 주문 상태 업데이트 로직 (예: 모든 항목 취소시 주문 상태도 변경)
-        boolean allCanceled = order.getOrderItems().stream()
+        // 최신 상태로 주문 항목 리스트를 DB에서 다시 조회
+        List<OrderItem> orderItems = orderItemRepository.findByOrderOrderId(order.getOrderId());
+
+        boolean allCanceled = orderItems.stream()
                 .allMatch(item -> item.getOrderStatus() == OrderStatus.CANCELED);
 
         if (allCanceled) {
@@ -362,7 +324,7 @@ public class OrderService {
         }
 
         // 8. 변경된 주문 정보를 반환 (상품 정보 포함)
-        List<Long> productIds = order.getOrderItems().stream()
+        List<Long> productIds = orderItems.stream()
                 .map(OrderItem::getProductId)
                 .distinct()
                 .collect(Collectors.toList());
@@ -373,5 +335,23 @@ public class OrderService {
 
         return orderMapper.toDto(order, productMap);
     }
+
+    // 관리자 여부 확인(공통 메서드로 빼놈)
+    private boolean isAdmin(TokenUserInfo tokenUserInfo) {
+        return Role.ADMIN.equals(tokenUserInfo.getRole());
+    }
+
+    // 상품 정보를 여러 개 조회하는 공통 메서드
+    private List<ProductResDto> getProductsByIds(List<Long> productIds) {
+        // 여러 상품 정보 조회
+        CommonResDto<List<ProductResDto>> productResponse = productServiceClient.getProducts(productIds);
+
+        if (productResponse == null || productResponse.getResult() == null) {
+            throw new RuntimeException("상품 정보 조회 실패");
+        }
+
+        return productResponse.getResult(); // 상품 정보 반환
+    }
+
 
 }

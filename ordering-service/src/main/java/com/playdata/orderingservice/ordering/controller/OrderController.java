@@ -45,10 +45,19 @@ public class OrderController {
         return new ResponseEntity<>(resDto, HttpStatus.CREATED);
     }
 
-    // 주문 조회
-    @GetMapping("/{orderId}")
-    public OrderResponseDto getOrder(@PathVariable Long orderId, @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
-        return orderService.getOrder(orderId, userInfo);
+    // 사용자 전체 주문 취소
+    @DeleteMapping("/{orderId}/cancel")
+    public void deleteOrder(@PathVariable Long orderId, @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        orderService.deleteOrder(orderId, userInfo);
+    }
+
+    // 주문 상세(상품) 상태 변경 (관리자,사용자) -> 개별 상품 관리 전용 기능
+    @PutMapping("/items/{orderItemId}/status")
+    public OrderResponseDto updateOrderItemStatus(
+            @PathVariable Long orderItemId,
+            @RequestParam String status,
+            @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
+        return orderService.updateOrderItemStatus(orderItemId, status, userInfo);
     }
 
     // 사용자의 전체 주문 조회 (email로 조회)
@@ -57,40 +66,12 @@ public class OrderController {
         return orderService.getOrdersByEmail(email, userInfo);
     }
 
-    // 사용자의 전체 주문 조회 (email로 조회)
-    @GetMapping("/userOrderServer")
-    public List<OrderResponseDto> getOrdersServer(@RequestParam String email){
-        return orderService.getOrdersByEmailServer(email);
-    }
-
-    // 주문 상태 변경
-    @PutMapping("/{orderId}/status")
-    public OrderResponseDto updateOrderStatus(
-            @PathVariable Long orderId,
-            @RequestParam String status,
-            @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
-        return orderService.updateOrderStatus(orderId, status, userInfo);
-    }
-
-    // 주문 취소
-    @DeleteMapping("/{orderId}/cancel")
-    public void deleteOrder(@PathVariable Long orderId, @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
-        orderService.deleteOrder(orderId, userInfo);
-    }
-
     // 관리자용: 전체 사용자 주문 전체 조회
     @GetMapping("/admin/all")
     public List<OrderResponseDto> getAllOrders(@AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
         return orderService.getAllOrders(userInfo);
     }
 
-    // 주문 상세(상품) 상태 변경 (관리자용)
-    @PutMapping("/items/{orderItemId}/status")
-    public OrderResponseDto updateOrderItemStatus(
-            @PathVariable Long orderItemId,
-            @RequestParam String status,
-            @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
-        return orderService.updateOrderItemStatus(orderItemId, status, userInfo);
-    }
+
 
 }

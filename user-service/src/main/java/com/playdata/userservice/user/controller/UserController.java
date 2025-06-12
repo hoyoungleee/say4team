@@ -21,9 +21,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -186,77 +187,6 @@ public class UserController {
                 = new CommonResDto(HttpStatus.OK, "이메일로 회원 조회 완료", dto);
         return ResponseEntity.ok().body(resDto);
     }
-
-    @PostMapping("/email-valid")
-    public ResponseEntity<?> emailVaild(@RequestBody Map<String, String> map) {
-        String email = map.get("email");
-        log.info("이메일 인증 요청!: {}", map.get("email"));
-        String authNum = userService.mailCheck(email);
-        return ResponseEntity.ok().body(authNum);
-    }
-
-    //인증코드 검증 요청
-    @PostMapping("/verify")
-    public ResponseEntity<?> verifyEmail(@RequestBody Map<String, String> map) {
-        log.info("인증코드검증! map:{}",map);
-        Map<String, String> result = userService.verifyEmail(map);
-        return ResponseEntity.ok().body("인증 성공!");
-
-    }
-
-    //카카오 콜백 요청 처리
-    @GetMapping("/kakao")
-    public void kakaoCallback(@RequestParam String code,
-                              HttpServletResponse response) throws IOException {
-        log.info("카카오 콜백 처리 시작! code: {}", code);
-
-
-        // 1. 인가 코드로 access token 발급
-        String kakaoAccessToken = userService.getKakaoAccessToken(code);
-
-        // 2. 엑세스 토큰으로 사용자 정보 요청
-        KakaoUserDto dto = userService.getKakaoUserInfo(kakaoAccessToken);
-
-        // 3. 사용자 저장 or 로그인
-        UserResDto resDto = userService.findOrCreateKakaoUser(dto);
-
-        // 4. JWT 생성
-        String token = jwtTokenProvider.createToken(resDto.getEmail(), resDto.getRole().toString());
-        String refreshToken = jwtTokenProvider.createRefreshToken(resDto.getEmail(), resDto.getRole().toString());
-
-        // 5. RefreshToken Redis 저장
-        redisTemplate.opsForValue().set("user:refresh:" + resDto.getUserid(), refreshToken, 2, TimeUnit.MINUTES);
-
-        // 클라이언트에 token postMessage 후, 주소창에서 code 제거
-        String html = String.format("""
-            <!DOCTYPE html>
-            <html>
-            <head><title>카카오 로그인 완료</title></head>
-            <body>
-                <script>
-                    if (window.opener) {
-                        window.opener.postMessage({
-                            type: 'OAUTH_SUCCESS',
-                            token: '%s',
-                            id: '%s',
-                            role: '%s',
-                            provider: 'KAKAO'
-                        }, 'http://localhost:5173');
-                        window.close();
-                    } else {
-                        window.location.href = 'http://localhost:5173';
-                    }
-                </script>
-                <p>카카오 로그인 처리 중...</p>
-            </body>
-            </html>
-            """,
-                token, resDto.getUserid(), resDto.getRole().toString());
-
-        response.setContentType("text/html;charset=utf-8");
-        response.getWriter().write(html);
-    }
-
 
     @GetMapping("/health-check")
     public String healthCheck() {

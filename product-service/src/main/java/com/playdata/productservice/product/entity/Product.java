@@ -1,5 +1,6 @@
 package com.playdata.productservice.product.entity;
 
+import com.playdata.productservice.category.entity.Category;
 import com.playdata.productservice.common.entity.BaseTimeEntity;
 import com.playdata.productservice.product.dto.ProductResDto;
 import jakarta.persistence.*;
@@ -41,13 +42,21 @@ public class Product extends BaseTimeEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImages> productImages;
 
+    public void decreaseQuantity(Long quantity){
+        if (this.stockQuantity - quantity < 0) {
+            throw new RuntimeException("재고는 0 미만이 될 수 없어요!");
+        }
+        this.stockQuantity -= quantity;
+    }
+
+
 
     public ProductResDto fromEntity() {
         return ProductResDto.builder()
                 .id(productId)
                 .name(name)
                 .categoryId(category.getCategoryId())
-                .categoryName(category.getName())
+                .categoryName(category.getCategoryName())
                 .price(price)
                 .description(description)
                 .stockQuantity(stockQuantity)

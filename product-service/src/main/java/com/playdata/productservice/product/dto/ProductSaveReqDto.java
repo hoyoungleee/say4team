@@ -1,6 +1,6 @@
 package com.playdata.productservice.product.dto;
 
-import com.playdata.productservice.product.entity.Category;
+import com.playdata.productservice.category.entity.Category;
 import com.playdata.productservice.product.entity.Product;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
