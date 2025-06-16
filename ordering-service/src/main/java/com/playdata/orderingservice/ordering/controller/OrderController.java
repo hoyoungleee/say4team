@@ -4,6 +4,7 @@ import com.playdata.orderingservice.common.auth.TokenUserInfo;
 import com.playdata.orderingservice.common.dto.CommonResDto;
 import com.playdata.orderingservice.ordering.dto.OrderRequestDto;
 import com.playdata.orderingservice.ordering.dto.OrderResponseDto;
+import com.playdata.orderingservice.ordering.dto.UpdateAddressRequest;
 import com.playdata.orderingservice.ordering.entity.Order;
 import com.playdata.orderingservice.ordering.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -72,6 +73,22 @@ public class OrderController {
         return orderService.getAllOrders(userInfo);
     }
 
+    // 배송지 변경 요청 (주문 상태가 주문완료 상태일 때만 가능)
+    @PatchMapping("/{orderId}/address")
+    public ResponseEntity<?> updateOrderAddress(
+            @PathVariable Long orderId,
+            @RequestBody UpdateAddressRequest request,
+            @AuthenticationPrincipal TokenUserInfo userInfo) throws AccessDeniedException {
 
+        OrderResponseDto updatedOrder = orderService.updateOrderAddress(orderId, request.getAddress(), userInfo);
+
+        CommonResDto resDto = new CommonResDto(
+                HttpStatus.OK,
+                "배송지 변경 완료",
+                updatedOrder
+        );
+
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
+    }
 
 }

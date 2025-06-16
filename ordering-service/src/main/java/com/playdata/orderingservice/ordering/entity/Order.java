@@ -37,6 +37,7 @@ public class Order {
     private String email; // 유저 아이디
 
     @Column(name = "address", nullable = false)
+    @Setter
     private String address; // 주소
 
     // orphanRemoval = true : 부모 객체에서 자식 객체가 제거되면 자동으로 데이터베이스에서도 삭제됨.

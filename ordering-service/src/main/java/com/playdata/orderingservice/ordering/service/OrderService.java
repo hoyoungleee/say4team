@@ -338,6 +338,39 @@ public class OrderService {
         return orderMapper.toDto(order, productMap);
     }
 
+    public OrderResponseDto updateOrderAddress(Long orderId, String address, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+
+        // 권한 체크
+        if (!isAdmin(tokenUserInfo) && !order.getEmail().equals(tokenUserInfo.getEmail())) {
+            throw new AccessDeniedException("자기 자신의 주문만 배송지를 변경할 수 있습니다.");
+        }
+
+        // 주문 상태가 ORDERED(주문완료)일 때만 배송지 변경 가능
+        if (order.getOrderStatus() != OrderStatus.ORDERED) {
+            throw new IllegalStateException("주문 완료 상태일 때만 배송지 변경이 가능합니다.");
+        }
+
+        // 배송지 변경
+        order.setAddress(address);
+        orderRepository.save(order);
+
+        // 변경된 주문 정보를 반환 (상품 정보 포함)
+        List<Long> productIds = order.getOrderItems().stream()
+                .map(OrderItem::getProductId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<ProductResDto> productList = getProductsByIds(productIds);
+        Map<Long, ProductResDto> productMap = productList.stream()
+                .collect(Collectors.toMap(ProductResDto::getId, p -> p));
+
+        return orderMapper.toDto(order, productMap);
+    }
+
+    //-----------------------------------------------------------------------------------------------------
+
     // 관리자 여부 확인(공통 메서드로 빼놈)
     private boolean isAdmin(TokenUserInfo tokenUserInfo) {
         return Role.ADMIN.equals(tokenUserInfo.getRole());
