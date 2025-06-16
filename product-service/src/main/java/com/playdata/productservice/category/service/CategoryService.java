@@ -37,9 +37,9 @@ public class CategoryService {
     public ResponseEntity<?> createProductCategory(CategorySaveReqDto reqDto) {
 
         if(reqDto.getCategoryBgImg() == null || reqDto.getCategoryBgImg().isEmpty()) {
-            return ResponseEntity.badRequest().body("필수 항목 이미지 등록 누락.");
+            return ResponseEntity.internalServerError().body("필수 항목 이미지 등록 누락.");
         } else if(reqDto.getCategoryName() == null || reqDto.getCategoryName().isEmpty()) {
-            return ResponseEntity.badRequest().body("필수 항목 카테고리 이름 등록 누락.");
+            return ResponseEntity.internalServerError().body("필수 항목 카테고리 이름 등록 누락.");
         }
         String categoryBgImageUrl = "";
         try {
@@ -142,5 +142,12 @@ public class CategoryService {
         CategoryResDto categoryResDto = Category.fromEntity(category);
 
         return categoryResDto;
+    }
+
+    public List<CategoryResDto> getExtraProductCategory() {
+        List<CategoryResDto> categoryList = categoryRepository.findByExtraCategory()
+                .stream().map(Category::fromEntity).collect(Collectors.toList());
+
+        return categoryList;
     }
 }

@@ -31,14 +31,22 @@ public class CategoryController {
 
     private final CategoryService categoryService;
     private final UserServiceClient userServiceClient;
-//        // 사용자 정보 조회
-//        ResponseEntity<?> userdata = userServiceClient.getUserByEmail(email, token);
 
     @GetMapping("/list")
     public ResponseEntity<?> getAllProductCategory(Pageable pageable) {
         List<CategoryResDto> productCategorys = categoryService.getAllProductCategory(pageable);
         if(productCategorys.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("카테고리가 없습니다.");
+        }
+
+        return ResponseEntity.ok(productCategorys);
+    }
+
+    @GetMapping("/navList")
+    public ResponseEntity<?> getExtraProductCategory() {
+        List<CategoryResDto> productCategorys = categoryService.getExtraProductCategory();
+        if(productCategorys.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("추가 카테고리가 없습니다.");
         }
 
         return ResponseEntity.ok(productCategorys);
