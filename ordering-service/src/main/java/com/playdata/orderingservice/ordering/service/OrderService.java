@@ -50,7 +50,13 @@ public class OrderService {
         if (userResponse == null || userResponse.getResult() == null) {
             throw new RuntimeException("사용자 정보가 없습니다.");
         }
-        String address = userResponse.getResult().getAddress();
+        String defaultAddress = userResponse.getResult().getAddress();
+
+        // 주문 요청에서 주소 가져오기, 없으면 사용자 기본 주소 사용
+        String address = orderRequestDto.getAddress();
+        if (address == null || address.isBlank()) {
+            address = defaultAddress;
+        }
 
         // 1. 장바구니 조회
         CartResponseDto cartResponse = cartService.getCart(tokenUserInfo);
@@ -59,7 +65,6 @@ public class OrderService {
         // 2. 요청된 cartItemIds만 필터링
         List<Long> selectedCartItemIds = orderRequestDto.getCartItemIds();
 
-        // null 체크 추가
         if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {
             throw new IllegalArgumentException("선택된 장바구니 아이템이 없습니다.");
         }
@@ -117,17 +122,15 @@ public class OrderService {
         // 9. 장바구니에서 주문한 아이템만 삭제
         cartService.removeCartItems(tokenUserInfo, selectedCartItemIds);
 
-
         // 10. 상품 수량 감소 요청
         selectedCartItems.forEach(cartItem -> {
             ProductResDto product = productMap.get(cartItem.getProductId());
             if (product != null) {
-                int newQuantity = product.getStockQuantity() - cartItem.getQuantity(); // 수량 차감
-                product.setStockQuantity(newQuantity); // 상품 수량 업데이트
+                int newQuantity = product.getStockQuantity() - cartItem.getQuantity();
+                product.setStockQuantity(newQuantity);
 
-                // 상품 수량 업데이트 요청
                 try {
-                    productServiceClient.updateQuantity(product); // 수량 업데이트 호출
+                    productServiceClient.updateQuantity(product);
                 } catch (Exception e) {
                     log.error("상품 수량 업데이트 실패: {}", e.getMessage());
                     throw new RuntimeException("상품 수량 업데이트 실패");
@@ -136,10 +139,9 @@ public class OrderService {
         });
 
         // 11. 주문 상태 업데이트
-        order.setOrderStatus(OrderStatus.ORDERED); // 주문 완료 상태로 변경
-        // 각 orderItem의 상태도 변경
+        order.setOrderStatus(OrderStatus.ORDERED);
         orderItems.forEach(item -> item.setOrderStatus(OrderStatus.ORDERED));
-        orderRepository.save(order); // 변경된 상태 저장
+        orderRepository.save(order);
 
         return order;
     }

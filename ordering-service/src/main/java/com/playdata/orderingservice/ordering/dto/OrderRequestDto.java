@@ -9,5 +9,7 @@ import java.util.List;
 @Data
 public class OrderRequestDto {
     private List<Long> cartItemIds; // 선택된 카트 아이템 ID만 전달
+    private String address; // 주문시 새로운 배송지
+    private String email; // 주문시 새로운 이메일
 }
 
