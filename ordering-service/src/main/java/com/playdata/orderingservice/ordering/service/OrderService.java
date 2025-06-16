@@ -184,7 +184,6 @@ public class OrderService {
         return order;
     }
 
-
     // 사용자 전체 주문 조회
     public List<OrderResponseDto> getOrdersByEmail(String email, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
         // 관리자 권한 체크
@@ -352,17 +351,9 @@ public class OrderService {
             }
         }
 
-        // 7. 전체 주문 상태 업데이트 로직 (예: 모든 항목 취소시 주문 상태도 변경)
-        // 최신 상태로 주문 항목 리스트를 DB에서 다시 조회
+        // 7. 전체 주문 상태 업데이트 로직 (다양한 상태 반영)
         List<OrderItem> orderItems = orderItemRepository.findByOrderOrderId(order.getOrderId());
-
-        boolean allCanceled = orderItems.stream()
-                .allMatch(item -> item.getOrderStatus() == OrderStatus.CANCELED);
-
-        if (allCanceled) {
-            order.setOrderStatus(OrderStatus.CANCELED);
-            orderRepository.save(order);
-        }
+        updateOrderStatusBasedOnItems(order, orderItems);
 
         // 8. 변경된 주문 정보를 반환 (상품 정보 포함)
         List<Long> productIds = orderItems.stream()
@@ -375,6 +366,39 @@ public class OrderService {
                 .collect(Collectors.toMap(ProductResDto::getId, p -> p));
 
         return orderMapper.toDto(order, productMap);
+    }
+
+    // 별도 메서드로 분리한 주문 상태 업데이트 로직
+    private void updateOrderStatusBasedOnItems(Order order, List<OrderItem> orderItems) {
+        // 모든 항목이 취소 상태
+        boolean allCanceled = orderItems.stream()
+                .allMatch(item -> item.getOrderStatus() == OrderStatus.CANCELED);
+
+        // 모든 항목이 배송 완료 상태
+        boolean allDelivered = orderItems.stream()
+                .allMatch(item -> item.getOrderStatus() == OrderStatus.DELIVERED);
+
+        // 모든 항목이 배송중 상태
+        boolean allShipped = orderItems.stream()
+                .allMatch(item -> item.getOrderStatus() == OrderStatus.SHIPPED);
+
+        // 모든 항목이 주문 완료 상태
+        boolean allOrdered = orderItems.stream()
+                .allMatch(item -> item.getOrderStatus() == OrderStatus.ORDERED);
+
+        // 조건에 맞게 주문 상태 변경 (전부 같은 상태일 때만 변경)
+        if (allCanceled) {
+            order.setOrderStatus(OrderStatus.CANCELED);
+        } else if (allDelivered) {
+            order.setOrderStatus(OrderStatus.DELIVERED);
+        } else if (allShipped) {
+            order.setOrderStatus(OrderStatus.SHIPPED);
+        } else if (allOrdered) {
+            order.setOrderStatus(OrderStatus.ORDERED);
+        } else if (allOrdered) {
+            order.setOrderStatus(OrderStatus.RETURNED);
+        }
+        orderRepository.save(order);
     }
 
     public OrderResponseDto updateOrderAddress(Long orderId, String address, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
