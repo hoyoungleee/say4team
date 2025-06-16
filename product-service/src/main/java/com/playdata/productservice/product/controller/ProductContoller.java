@@ -122,6 +122,28 @@ public class ProductContoller {
         return ResponseEntity.ok().body(resDto);
     }
 
+    /**
+     * 카테고리 ID 목록에 해당하는 상품의 총 개수를 반환하는 API
+     * POST 요청으로 categoryIds 리스트를 받습니다.
+     * @param requestBody categoryIds를 포함하는 요청 바디 (예: { "categoryIds": [1, 2, 3] })
+     * @return 상품 개수를 담은 응답 (예: { "count": 123 })
+     */
+    @PostMapping("/countByCategories")
+    public ResponseEntity<?> countProductsByCategories(@RequestBody Map<String, List<Long>> requestBody) {
+        log.info("POST /api/prod/countByCategories 요청 수신: {}", requestBody);
+        List<Long> categoryIds = requestBody.get("categoryIds");
+
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            // 요청 바디에 categoryIds가 없거나 비어있는 경우
+            log.warn("요청 바디에 categoryIds가 없거나 비어있습니다.");
+            return ResponseEntity.badRequest().body("categoryIds는 필수입니다.");
+        }
+
+        Long count = productService.countProductsByCategories(categoryIds);
+        log.info("카테고리 {}에 해당하는 상품 총 개수: {}", categoryIds, count);
+
+        return ResponseEntity.ok( count);
+    }
 
 }
 

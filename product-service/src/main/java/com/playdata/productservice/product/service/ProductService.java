@@ -236,6 +236,15 @@ public class ProductService {
         return productRepository.save(product);
 
     }
+
+    @Transactional(readOnly = true) // 읽기 전용 트랜잭션으로 설정
+    public Long countProductsByCategories(List<Long> categoryIds) {
+        log.info("countProductsByCategories 서비스 호출: categoryIds={}", categoryIds);
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return 0L; // 빈 목록이 넘어오면 0 반환
+        }
+        return productRepository.countByCategory_CategoryIdIn(categoryIds);
+    }
 }
 
 
