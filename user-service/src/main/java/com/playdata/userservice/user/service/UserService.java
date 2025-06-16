@@ -117,10 +117,23 @@ public class UserService {
             String encodedPassword = encoder.encode(dto.getPassword());
             user.setPassword(encodedPassword);
         }
+
+        if (dto.getBirthDate() != null) {
+            user.setBirthDate(dto.getBirthDate());
+        }
+
         user.setName(dto.getName());
         user.setAddress(dto.getAddress());
         user.setPhone(dto.getPhone());
 
+        return userRepository.save(user);
+    }
+
+    public User updateUserAddress(Long userId, String address) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setAddress(address);
         return userRepository.save(user);
     }
 
@@ -169,14 +182,6 @@ public class UserService {
                 () -> new EntityNotFoundException("User not found!")
         );
         return user.fromEntity();
-    }
-
-    public User updateUserAddress(Long userId, String address) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        user.setAddress(address);
-        return userRepository.save(user);
     }
 
     public String mailCheck(String email) {
