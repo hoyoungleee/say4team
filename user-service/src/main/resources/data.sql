@@ -19,7 +19,7 @@ INSERT INTO tbl_users (name, password, email, address, role, status, phone, birt
                        registered_at, social_id, profile_image, social_provider)
 VALUES ('user',
         '$2a$10$DjkrliK9L/06dXqoix8JIeuIcExkVWbc1eswetti/bzFoxsLN51H2',
-        'user@example.com',
+        'user@naver.com',
         '부산광역시 해운대구',
         'USER',
         'ACTIVE',
