@@ -42,7 +42,8 @@ public class SecurityConfig {
                             "/actuator/**",
                             "/review/list/*",
                             "/review/detail/*",
-                            "/category/list"
+                            "/category/list",
+                            "/category/navList"
                             ).permitAll()
                     .anyRequest().authenticated();
         });
