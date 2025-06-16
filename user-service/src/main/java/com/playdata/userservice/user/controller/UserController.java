@@ -93,6 +93,7 @@ public class UserController {
         return ResponseEntity.ok().body(resDto);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @GetMapping("/profile/{id}")
     public ResponseEntity<?> getProfile(@PathVariable("id") String  id) {
         try {
@@ -265,6 +266,7 @@ public class UserController {
                                 type: 'OAUTH_SUCCESS',
                                 token: '%s',
                                 id: '%s',
+                                email: '%s',
                                 role: '%s',
                                 provider: 'KAKAO'
                             }, 'http://localhost:5173');
@@ -277,7 +279,7 @@ public class UserController {
                 </body>
                 </html>
                 """,
-                token, resDto.getUserid(), resDto.getRole().toString());
+                token, resDto.getUserid(), resDto.getEmail(), resDto.getRole().toString());
         response.setContentType("text/html;charset=utf-8");
         response.getWriter().write(html);
     }

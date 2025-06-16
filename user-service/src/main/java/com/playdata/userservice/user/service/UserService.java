@@ -347,6 +347,7 @@ public class UserService {
                         .password(null)// 외부 로그인이라 정보없음.
                         .address(null) // 필요하다면 따로 페이지 만들기
                         .registeredAt(LocalDateTime.now())
+                        .status(UserStatus.ACTIVE)
                         .build();
                 User saved = userRepository.save(kakao);
                 return saved.fromEntity();
@@ -361,6 +362,7 @@ public class UserService {
                         .password(null)// 외부 로그인이라 정보없음.
                         .address(null) // 필요하다면 따로 페이지 만들기
                         .registeredAt(LocalDateTime.now())
+                        .status(UserStatus.ACTIVE)
                         .build();
                 User saved = userRepository.save(kakao);
                 return saved.fromEntity();
