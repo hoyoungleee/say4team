@@ -254,32 +254,61 @@ public class UserController {
         //redis에 저장
         redisTemplate.opsForValue().set("user:refresh:" + resDto.getUserid(), refreshToken, 2, TimeUnit.MINUTES);
 
+        String html = "";
         //팝업 닫기
-        String html = String.format("""
-                <!DOCTYPE html>
-                <html>
-                <head><title>카카오 로그인 완료</title></head>
-                <body>
-                    <script>
-                        if (window.opener) {
-                            window.opener.postMessage({
-                                type: 'OAUTH_SUCCESS',
-                                token: '%s',
-                                id: '%s',
-                                email: '%s',
-                                role: '%s',
-                                provider: 'KAKAO'
-                            }, 'http://localhost:5173');
-                            window.close();
-                        } else {
-                            window.location.href = 'http://localhost:5173';
-                        }
-                    </script>
-                    <p>카카오 로그인 처리 중...</p>
-                </body>
-                </html>
-                """,
-                token, resDto.getUserid(), resDto.getEmail(), resDto.getRole().toString());
+        if(clientType.equals("user")) {
+            html = String.format("""
+                    <!DOCTYPE html>
+                    <html>
+                    <head><title>카카오 로그인 완료</title></head>
+                    <body>
+                        <script>
+                            if (window.opener) {
+                                window.opener.postMessage({
+                                    type: 'OAUTH_SUCCESS',
+                                    token: '%s',
+                                    id: '%s',
+                                    email: '%s',
+                                    role: '%s',
+                                    provider: 'KAKAO'
+                                }, 'http://localhost:5173');
+                                window.close();
+                            } else {
+                                window.location.href = 'http://localhost:5173';
+                            }
+                        </script>
+                        <p>카카오 로그인 처리 중...</p>
+                    </body>
+                    </html>
+                    """,
+                    token, resDto.getUserid(), resDto.getEmail(), resDto.getRole().toString());
+        }else {
+            html = String.format("""
+                    <!DOCTYPE html>
+                    <html>
+                    <head><title>카카오 로그인 완료</title></head>
+                    <body>
+                        <script>
+                            if (window.opener) {
+                                window.opener.postMessage({
+                                    type: 'OAUTH_SUCCESS',
+                                    token: '%s',
+                                    id: '%s',
+                                    email: '%s',
+                                    role: '%s',
+                                    provider: 'KAKAO'
+                                }, 'http://localhost:9090');
+                                window.close();
+                            } else {
+                                window.location.href = 'http://localhost:9090';
+                            }
+                        </script>
+                        <p>카카오 로그인 처리 중...</p>
+                    </body>
+                    </html>
+                    """,
+                    token, resDto.getUserid(), resDto.getEmail(), resDto.getRole().toString());
+        }
         response.setContentType("text/html;charset=utf-8");
         response.getWriter().write(html);
     }
