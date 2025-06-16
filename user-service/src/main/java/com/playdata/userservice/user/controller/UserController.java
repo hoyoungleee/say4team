@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -36,6 +37,7 @@ public class UserController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final Set<String> usedCode = ConcurrentHashMap.newKeySet();
 
 
     private final Environment env;
@@ -265,10 +267,10 @@ public class UserController {
                                 id: '%s',
                                 role: '%s',
                                 provider: 'KAKAO'
-                            }, 'http://localhost:9090');
+                            }, 'http://localhost:5173');
                             window.close();
                         } else {
-                            window.location.href = 'http://localhost:9090';
+                            window.location.href = 'http://localhost:5173';
                         }
                     </script>
                     <p>카카오 로그인 처리 중...</p>

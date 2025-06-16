@@ -1,11 +1,7 @@
 package com.playdata.userservice.user.service;
 
 import com.playdata.userservice.common.auth.TokenUserInfo;
-import com.playdata.userservice.user.dto.KakaoUserDto;
-import com.playdata.userservice.user.dto.UserLoginReqDto;
-import com.playdata.userservice.user.dto.UserResDto;
-import com.playdata.userservice.user.dto.UserSaveReqDto;
-import com.playdata.userservice.user.dto.UserUpdateRequestDto;
+import com.playdata.userservice.user.dto.*;
 import com.playdata.userservice.user.entity.Role;
 import com.playdata.userservice.user.entity.User;
 import com.playdata.userservice.user.entity.UserStatus;
@@ -32,7 +28,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +42,8 @@ public class UserService {
     //필요한 객체 생성하여 주입
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
+    private final RedisTemplate  redisTemplate;
     private final MailSenderService mailSenderService;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     // Redis Key 상수
     private static final String VERIFYCATION_CODE_KEY = "email_verify:code:";
