@@ -118,6 +118,15 @@ public class CartService {
         return CartResponseDto.from(savedCart, productMap);
     }
 
+    public void removeItemFromCartByProductId(TokenUserInfo tokenUserInfo, Long productId) {
+        String email = tokenUserInfo.getEmail();
+        Cart cart = cartRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("장바구니가 존재하지 않습니다."));
+        cart.getItems().removeIf(item -> item.getProductId().equals(productId));
+        cartRepository.save(cart);
+    }
+
+
     /* 공통 메서드 부분 */
 
     private Cart createEmptyCart(String email) {
