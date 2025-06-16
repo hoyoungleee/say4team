@@ -3,13 +3,12 @@ package com.playdata.orderingservice.ordering.dto;
 import lombok.Data;
 import java.util.List;
 
-
 // 주문 생성 요청 DTO
-
 @Data
 public class OrderRequestDto {
-    private List<Long> cartItemIds; // 선택된 카트 아이템 ID만 전달
-    private String address; // 주문시 새로운 배송지
-    private String email; // 주문시 새로운 이메일
+    private List<Long> cartItemIds;    // 장바구니 주문용
+    private Long directProductId;      // 바로 주문용 상품 ID
+    private int quantity;              // 바로 주문 수량
+    private String address;            // 배송지
+    private String email;              // (선택) 주문 이메일
 }
-

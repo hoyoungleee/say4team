@@ -2,7 +2,7 @@
 INSERT INTO tbl_users (name, password, email, address, role, status, phone, birth_date,
                        registered_at, social_id, profile_image, social_provider)
 VALUES ('admin',
-        '$2a$10$2zFEXENDdTCzjOijyyOQj.jdy/aPXg/33aonIQ9mBMnd2T50BeOK.',
+        '$2a$10$OcOFA5fnT7Se7yp1jq3TpuIFnF37aCrY/VwFmTPnhyBhrEFl1AqH2',
         'admin@admin.com',
         '서울특별시 강남구',
         'ADMIN',
@@ -18,7 +18,7 @@ VALUES ('admin',
 INSERT INTO tbl_users (name, password, email, address, role, status, phone, birth_date,
                        registered_at, social_id, profile_image, social_provider)
 VALUES ('user',
-        '$2a$10$DjkrliK9L/06dXqoix8JIeuIcExkVWbc1eswetti/bzFoxsLN51H2',
+        '$2a$10$TkoNtZgEO286HhW72WOr/eswnDRfg.dC.8ToiLdksy0vRAY4wVQny',
         'user@naver.com',
         '부산광역시 해운대구',
         'USER',

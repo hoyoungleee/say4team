@@ -38,72 +38,111 @@ public class OrderService {
     private final CartService cartService;
     private final OrderItemRepository orderItemRepository;
 
-    // 주문 생성
     public Order createOrder(OrderRequestDto orderRequestDto, TokenUserInfo tokenUserInfo) {
         String userEmail = tokenUserInfo.getEmail();
         if (userEmail == null) {
             throw new RuntimeException("토큰에서 사용자 정보를 가져올 수 없습니다.");
         }
 
-        // 사용자 정보 조회 (주소 포함)
+        // 사용자 주소 조회
         CommonResDto<UserResDto> userResponse = userServiceClient.findByEmail(userEmail);
         if (userResponse == null || userResponse.getResult() == null) {
             throw new RuntimeException("사용자 정보가 없습니다.");
         }
         String defaultAddress = userResponse.getResult().getAddress();
 
-        // 주문 요청에서 주소 가져오기, 없으면 사용자 기본 주소 사용
+        // 주소 결정: 요청 주소 없으면 기본주소 사용
         String address = orderRequestDto.getAddress();
         if (address == null || address.isBlank()) {
             address = defaultAddress;
         }
 
-        // 1. 장바구니 조회
-        CartResponseDto cartResponse = cartService.getCart(tokenUserInfo);
-        List<CartResponseDto.CartItemDetailDto> allCartItems = cartResponse.getItems();
+        List<OrderItem> orderItems;
+        Map<Long, ProductResDto> productMap;
 
-        // 2. 요청된 cartItemIds만 필터링
-        List<Long> selectedCartItemIds = orderRequestDto.getCartItemIds();
+        // 1) 장바구니 주문
+        if (orderRequestDto.getCartItemIds() != null && !orderRequestDto.getCartItemIds().isEmpty()) {
+            CartResponseDto cartResponse = cartService.getCart(tokenUserInfo);
+            List<CartResponseDto.CartItemDetailDto> allCartItems = cartResponse.getItems();
 
-        if (selectedCartItemIds == null || selectedCartItemIds.isEmpty()) {
-            throw new IllegalArgumentException("선택된 장바구니 아이템이 없습니다.");
+            List<Long> selectedCartItemIds = orderRequestDto.getCartItemIds();
+
+            List<CartResponseDto.CartItemDetailDto> selectedCartItems = allCartItems.stream()
+                    .filter(item -> selectedCartItemIds.contains(item.getCartItemId()))
+                    .collect(Collectors.toList());
+
+            if (selectedCartItems.isEmpty()) {
+                throw new RuntimeException("선택한 장바구니 아이템이 존재하지 않습니다.");
+            }
+
+            List<Long> productIds = selectedCartItems.stream()
+                    .map(CartResponseDto.CartItemDetailDto::getProductId)
+                    .collect(Collectors.toList());
+
+            List<ProductResDto> productList = getProductsByIds(productIds);
+            productMap = productList.stream()
+                    .collect(Collectors.toMap(ProductResDto::getId, p -> p));
+
+            orderItems = new ArrayList<>(
+                    selectedCartItems.stream()
+                            .map(dto -> {
+                                ProductResDto product = productMap.get(dto.getProductId());
+                                if (product == null) {
+                                    throw new RuntimeException("상품 정보를 찾을 수 없습니다. ID: " + dto.getProductId());
+                                }
+                                return OrderItem.builder()
+                                        .productId(dto.getProductId())
+                                        .quantity(dto.getQuantity())
+                                        .unitPrice(BigDecimal.valueOf(product.getPrice()))
+                                        .build();
+                            })
+                            .collect(Collectors.toList())
+            );
+
+            // 장바구니에서 주문한 아이템만 삭제
+            cartService.removeCartItems(tokenUserInfo, selectedCartItemIds);
+
+        }
+        // 2) 바로 주문
+        else if (orderRequestDto.getDirectProductId() != null && orderRequestDto.getQuantity() > 0) {
+            Long productId = orderRequestDto.getDirectProductId();
+            int quantity = orderRequestDto.getQuantity();
+
+            List<ProductResDto> productList = getProductsByIds(List.of(productId));
+            if (productList.isEmpty()) {
+                throw new RuntimeException("상품 정보를 찾을 수 없습니다. ID: " + productId);
+            }
+            ProductResDto product = productList.get(0);
+
+            productMap = Map.of(productId, product);
+
+            orderItems = new ArrayList<>(
+                    List.of(
+                            OrderItem.builder()
+                                    .productId(productId)
+                                    .quantity(quantity)
+                                    .unitPrice(BigDecimal.valueOf(product.getPrice()))
+                                    .build()
+                    )
+            );
+
+            // 여기서 바로구매 시 장바구니에 있으면 삭제 처리 (수정)
+            try {
+                cartService.removeItemFromCartByProductId(tokenUserInfo, productId);
+            } catch (Exception e) {
+                log.warn("바로구매 후 장바구니 아이템 삭제 실패: {}", e.getMessage());
+            }
+
+    } else {
+            throw new IllegalArgumentException("주문할 상품 정보가 없습니다.");
         }
 
-        List<CartResponseDto.CartItemDetailDto> selectedCartItems = allCartItems.stream()
-                .filter(item -> selectedCartItemIds.contains(item.getCartItemId()))
-                .collect(Collectors.toList());
-
-        // 3. 상품 ID 목록 추출
-        List<Long> productIds = selectedCartItems.stream()
-                .map(CartResponseDto.CartItemDetailDto::getProductId)
-                .collect(Collectors.toList());
-
-        // 4. 상품 정보 조회 (가격 포함)
-        List<ProductResDto> productList = getProductsByIds(productIds);
-        Map<Long, ProductResDto> productMap = productList.stream()
-                .collect(Collectors.toMap(ProductResDto::getId, p -> p));
-
-        // 5. 주문 항목 생성
-        List<OrderItem> orderItems = selectedCartItems.stream()
-                .map(dto -> {
-                    ProductResDto product = productMap.get(dto.getProductId());
-                    if (product == null) {
-                        throw new RuntimeException("상품 정보를 찾을 수 없습니다. ID: " + dto.getProductId());
-                    }
-                    return OrderItem.builder()
-                            .productId(dto.getProductId())
-                            .quantity(dto.getQuantity())
-                            .unitPrice(BigDecimal.valueOf(product.getPrice()))
-                            .build();
-                })
-                .collect(Collectors.toList());
-
-        // 6. 총 가격 계산
+        // 총 가격 계산
         BigDecimal totalPrice = orderItems.stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 7. 주문 생성
+        // 주문 생성
         Order order = Order.builder()
                 .totalPrice(totalPrice)
                 .orderStatus(OrderStatus.PENDING_USER_FAILURE)
@@ -116,17 +155,16 @@ public class OrderService {
         // 양방향 관계 설정
         orderItems.forEach(item -> item.setOrder(order));
 
-        // 8. 저장
         orderRepository.save(order);
 
-        // 9. 장바구니에서 주문한 아이템만 삭제
-        cartService.removeCartItems(tokenUserInfo, selectedCartItemIds);
-
-        // 10. 상품 수량 감소 요청
-        selectedCartItems.forEach(cartItem -> {
-            ProductResDto product = productMap.get(cartItem.getProductId());
+        // 상품 수량 감소 요청
+        orderItems.forEach(item -> {
+            ProductResDto product = productMap.get(item.getProductId());
             if (product != null) {
-                int newQuantity = product.getStockQuantity() - cartItem.getQuantity();
+                int newQuantity = product.getStockQuantity() - item.getQuantity();
+                if (newQuantity < 0) {
+                    throw new RuntimeException("상품 재고가 부족합니다. 상품ID: " + product.getId());
+                }
                 product.setStockQuantity(newQuantity);
 
                 try {
@@ -138,13 +176,14 @@ public class OrderService {
             }
         });
 
-        // 11. 주문 상태 업데이트
+        // 주문 상태 업데이트
         order.setOrderStatus(OrderStatus.ORDERED);
         orderItems.forEach(item -> item.setOrderStatus(OrderStatus.ORDERED));
         orderRepository.save(order);
 
         return order;
     }
+
 
     // 사용자 전체 주문 조회
     public List<OrderResponseDto> getOrdersByEmail(String email, TokenUserInfo tokenUserInfo) throws AccessDeniedException {
