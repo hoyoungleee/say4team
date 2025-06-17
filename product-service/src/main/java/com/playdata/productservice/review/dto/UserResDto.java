@@ -18,6 +18,8 @@ public class UserResDto {
     private String name;
     private Role role;
     private String address;
+    private String profileImage;
+    private String socialProvider;
     private String phone;
     private LocalDate birthdate;
 
