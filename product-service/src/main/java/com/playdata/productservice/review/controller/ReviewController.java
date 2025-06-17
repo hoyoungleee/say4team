@@ -68,7 +68,7 @@ public class ReviewController {
             HttpServletRequest request
     ) throws IOException {
 
-        // 🔐 인증 정보 확인
+        //인증 정보 확인
         if (tokenUserInfo == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 필요");
         }
@@ -76,20 +76,35 @@ public class ReviewController {
         String email = tokenUserInfo.getEmail();
         String token = request.getHeader("Authorization");
 
-        // ✅ Bearer 접두사 보정
+        //Bearer 접두사 보정
         if (token != null && !token.startsWith("Bearer ")) {
             token = "Bearer " + token;
         }
 
-        // ✅ 사용자의 주문 목록 조회
+
+        // 사용자의 주문 목록 조회
         List<OrderResponseDto> orders = orderServiceClient.getOrdersServer(email); // 토큰 필요하면 추가 파라미터
 
-        boolean hasPurchased = orders.stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .anyMatch(item -> item.getProductId().equals(dto.getProductId()));
-
-        if (!hasPurchased) {
+        // 1. 주문 목록이 null이거나 비어있으면 구매 이력이 없으므로 바로 거부
+        if (orders == null || orders.isEmpty()) {
             return ResponseEntity.badRequest().body("구매한 상품만 리뷰 작성 가능합니다.");
+        }
+
+        System.out.println(dto.getProductId());
+        // 2. 구매 이력 및 주문 아이템 상태(DELIVERED) 확인
+        // 각 주문 아이템별로 상품 ID와 DELIVERED 상태를 동시에 확인합니다.
+        boolean hasPurchasedAndDeliveredItem = orders.stream()
+                // 모든 주문의 주문 아이템들을 하나의 스트림으로 평탄화
+                .flatMap(order -> order.getOrderItems().stream())
+                // 필터링: 현재 리뷰를 작성하려는 상품 ID와 일치하는 아이템만 선택
+                .filter(item -> item.getProductId().equals(dto.getProductId()))
+                // 필터링: 선택된 아이템의 상태가 'DELIVERED'인지 최종 확인
+                // item.getOrderItemStatus()가 String 타입이라면:
+                .anyMatch(item -> "DELIVERED".equalsIgnoreCase(item.getOrderStatus()));
+
+
+        if (!hasPurchasedAndDeliveredItem) {
+            return ResponseEntity.badRequest().body("배송 완료된 상품만 리뷰 작성 가능합니다.");
         }
 
         // 사용자 정보 조회

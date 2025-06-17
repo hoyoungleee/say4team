@@ -10,11 +10,13 @@ import java.math.BigDecimal;
 @Setter
 @AllArgsConstructor
 public class OrderItemDto {
-    private Long productId;
-    private int quantity;
-    private BigDecimal unitPrice;
-    private String productName;
-    private String mainImagePath;
-    private String categoryName;
+    private Long orderItemId;
+    private Long productId; // 상품 아이디
+    private int quantity; // 수량
+    private BigDecimal unitPrice; // 상품 가격
+    private String productName; // 상품 이름
+    private String mainImagePath; // 메인 이미지
+    private String categoryName; // 카테고리 이름
+    private String orderStatus; // 상품 상태 관리
 
 }
