@@ -133,7 +133,7 @@ public class OrderService {
                 log.warn("바로구매 후 장바구니 아이템 삭제 실패: {}", e.getMessage());
             }
 
-    } else {
+        } else {
             throw new IllegalArgumentException("주문할 상품 정보가 없습니다.");
         }
 
@@ -386,6 +386,10 @@ public class OrderService {
         boolean allOrdered = orderItems.stream()
                 .allMatch(item -> item.getOrderStatus() == OrderStatus.ORDERED);
 
+        // 모든 항목이 반품 완료 상태
+        boolean allReturned = orderItems.stream()
+                .allMatch(item -> item.getOrderStatus() == OrderStatus.RETURNED);
+
         // 조건에 맞게 주문 상태 변경 (전부 같은 상태일 때만 변경)
         if (allCanceled) {
             order.setOrderStatus(OrderStatus.CANCELED);
@@ -395,7 +399,7 @@ public class OrderService {
             order.setOrderStatus(OrderStatus.SHIPPED);
         } else if (allOrdered) {
             order.setOrderStatus(OrderStatus.ORDERED);
-        } else if (allOrdered) {
+        } else if (allReturned) {
             order.setOrderStatus(OrderStatus.RETURNED);
         }
         orderRepository.save(order);
