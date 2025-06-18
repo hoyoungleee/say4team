@@ -8,7 +8,7 @@ services:
     networks:
       - msa-network
     environment:
-      # application.yml에 설정된 값과 일치해야 합니다.
+      # application.yml의 datasource 설정과 일치해야 합니다.
       MYSQL_ROOT_PASSWORD: mysql # MySQL root 비밀번호 (여기에 실제 비밀번호 입력!)
       MYSQL_DATABASE: say4team # DB 이름 (application.yml과 일치)
       MYSQL_USER: spring # application.yml의 사용자 이름과 일치
@@ -32,19 +32,20 @@ services:
       - msa-network
     ports:
       - "8888:8888"
-    environment: # 기존 파일에서 가져온 환경 변수 정의
-      - GITHUB_URL=${GITHUB_URL}
-      - USERNAME=${GITHUB_USERNAME}
-      - TOKEN=${GITHUB_TOKEN}
-    env_file: # 기존 파일에서 가져온 .env 파일 로드
-      - .env
+    # 만약 config-service에 environment와 env_file 설정이 있었다면 아래처럼 추가해야 합니다.
+    # environment:
+    #   - GITHUB_URL=${GITHUB_URL}
+    #   - USERNAME=${GITHUB_USERNAME}
+    #   - TOKEN=${GITHUB_TOKEN}
+    # env_file:
+    #   - .env
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://config-service:8888/actuator/health" ]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    restart: always
+      interval: 15s # 15초마다 한번씩 체크
+      timeout: 5s  # 5초 안에 완료되어야 한다.
+      retries: 3 # 3번까지 재시도 하기
+      start_period: 30s # 컨테이너 시작 후 60초 동안은 health check 실패를 무시.
+    restart: always # 컨테이너가 모종의 이유로 중지되면 무조건 재시작 시도.
 
   discovery-service:
     image: 794038249902.dkr.ecr.ap-northeast-2.amazonaws.com/discovery-service:latest
@@ -55,11 +56,11 @@ services:
       - "8761:8761"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://discovery-service:8761" ]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    restart: always
+      interval: 15s # 15초마다 한번씩 체크
+      timeout: 5s  # 5초 안에 완료되어야 한다.
+      retries: 3 # 3번까지 재시도 하기
+      start_period: 30s # 컨테이너 시작 후 60초 동안은 health check 실패를 무시.
+    restart: always # 컨테이너가 모종의 이유로 중지되면 무조건 재시작 시도.
 
   gateway-service:
     image: 794038249902.dkr.ecr.ap-northeast-2.amazonaws.com/gateway-service:latest
@@ -69,6 +70,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      # gateway는 discovery와 config가 건강해야지만 컨테이너가 시작됩니다.
       discovery-service:
         condition: service_healthy
       config-service:
@@ -81,12 +83,14 @@ services:
     networks:
       - msa-network
     depends_on:
+      # gateway는 discovery와 config가 건강해야지만 컨테이너가 시작됩니다.
       discovery-service:
         condition: service_healthy
       config-service:
         condition: service_healthy
-      mysql: # <--- MySQL 의존성 추가 (mysql 서비스가 healthy할 때 시작)
-        condition: service_healthy
+      # 중요! MySQL이 먼저 건강해질 때까지 기다리도록 depends_on 추가 권장
+      # mysql:
+      #   condition: service_healthy
     restart: always
 
   ordering-service:
@@ -95,14 +99,16 @@ services:
     networks:
       - msa-network
     depends_on:
+      # gateway는 discovery와 config가 건강해야지만 컨테이너가 시작됩니다.
       discovery-service:
         condition: service_healthy
       config-service:
         condition: service_healthy
-      mysql: # <--- MySQL 의존성 추가
-        condition: service_healthy
-      redis: # <--- Redis 의존성 (만약 사용한다면, redis 서비스가 시작될 때 시작)
-        condition: service_started
+      # 중요! MySQL이 먼저 건강해질 때까지 기다리도록 depends_on 추가 권장
+      # mysql:
+      #   condition: service_healthy
+      # redis: # Redis도 사용한다면depends_on 추가
+      #   condition: service_started # Redis healthcheck가 없다면 service_started 사용
     restart: always
 
   product-service:
@@ -115,8 +121,9 @@ services:
         condition: service_healthy
       config-service:
         condition: service_healthy
-      mysql: # <--- MySQL 의존성 추가
-        condition: service_healthy
+      # 중요! MySQL이 먼저 건강해질 때까지 기다리도록 depends_on 추가 권장
+      # mysql:
+      #   condition: service_healthy
     restart: always
 
   redis:
@@ -125,14 +132,9 @@ services:
       - "6379:6379"
     networks:
       - msa-network
-    # Redis healthcheck (선택 사항이지만 권장, depends_on에 service_healthy를 사용할 수 있게 함)
-    # healthcheck:
-    #   test: ["CMD-SHELL", "redis-cli ping"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
 
 # 서비스들이 연결될 Docker 네트워크를 정의할 수 있습니다.
+# 동일한 호스트 내에서 서로 통신할 수 있도록 해 주는 Docker의 네트워크 드라이버.
 networks:
   msa-network:
     driver: bridge
