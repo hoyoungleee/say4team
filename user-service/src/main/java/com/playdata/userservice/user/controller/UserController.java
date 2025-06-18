@@ -271,10 +271,10 @@ public class UserController {
                                     email: '%s',
                                     role: '%s',
                                     provider: 'KAKAO'
-                                }, 'http://localhost:5173');
+                                }, 'https://say4team.shop');
                                 window.close();
                             } else {
-                                window.location.href = 'http://localhost:5173';
+                                window.location.href = 'https://say4team.shop';
                             }
                         </script>
                         <p>카카오 로그인 처리 중...</p>
@@ -297,10 +297,10 @@ public class UserController {
                                     email: '%s',
                                     role: '%s',
                                     provider: 'KAKAO'
-                                }, 'http://localhost:9090');
+                                }, 'https://say4teamadmin.shop');
                                 window.close();
                             } else {
-                                window.location.href = 'http://localhost:9090';
+                                window.location.href = 'https://say4teamadmin.shop';
                             }
                         </script>
                         <p>카카오 로그인 처리 중...</p>

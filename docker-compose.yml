@@ -1,8 +1,20 @@
 # Docker Compose 파일 포맷의 버전을 지정합니다.
 version: '3.8'
 services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    ports:
+      - "8080:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - msa-network
+
   config-service:
-    image: 940791490007.dkr.ecr.ap-northeast-2.amazonaws.com/config-service:latest
+    image: 664418999523.dkr.ecr.ap-northeast-2.amazonaws.com/config-service
     container_name: config-service
     networks:
       - msa-network
@@ -17,7 +29,7 @@ services:
     restart: always # 컨테이너가 모종의 이유로 중지되면 무조건 재시작 시도.
 
   discovery-service:
-    image: 940791490007.dkr.ecr.ap-northeast-2.amazonaws.com/discovery-service:latest
+    image: 664418999523.dkr.ecr.ap-northeast-2.amazonaws.com/discovery-service
     container_name: discovery-service
     networks:
       - msa-network
@@ -32,7 +44,7 @@ services:
     restart: always # 컨테이너가 모종의 이유로 중지되면 무조건 재시작 시도.
 
   gateway-service:
-    image: 940791490007.dkr.ecr.ap-northeast-2.amazonaws.com/gateway-service:latest
+    image: 664418999523.dkr.ecr.ap-northeast-2.amazonaws.com/gateway-service
     container_name: gateway-service
     networks:
       - msa-network
@@ -47,7 +59,7 @@ services:
     restart: always
 
   user-service:
-    image: 940791490007.dkr.ecr.ap-northeast-2.amazonaws.com/user-service:latest
+    image: 664418999523.dkr.ecr.ap-northeast-2.amazonaws.com/user-service
     container_name: user-service
     networks:
       - msa-network
@@ -60,7 +72,7 @@ services:
     restart: always
 
   ordering-service:
-    image: 940791490007.dkr.ecr.ap-northeast-2.amazonaws.com/ordering-service:latest
+    image: 664418999523.dkr.ecr.ap-northeast-2.amazonaws.com/ordering-service
     container_name: order-service
     networks:
       - msa-network
@@ -73,7 +85,7 @@ services:
     restart: always
 
   product-service:
-    image: 940791490007.dkr.ecr.ap-northeast-2.amazonaws.com/product-service:latest
+    image: 664418999523.dkr.ecr.ap-northeast-2.amazonaws.com/product-service
     container_name: product-service
     networks:
       - msa-network
@@ -100,3 +112,4 @@ networks:
 
 volumes:
   db-data: # mysql 컨테이너가 사용하는 db-data 볼륨을 docker-compose도 기억해 줌.
+  jenkins_home:
