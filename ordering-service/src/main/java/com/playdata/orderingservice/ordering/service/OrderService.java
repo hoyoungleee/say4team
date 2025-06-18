@@ -452,7 +452,7 @@ public class OrderService {
             throw new RuntimeException("상품 정보 조회 실패");
         }
 
-        return productResponse.getResult(); // 상품 정보 반환 로직
+        return productResponse.getResult(); // 상품 정보 반환
     }
 
 
