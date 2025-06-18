@@ -34,6 +34,8 @@ import java.util.concurrent.TimeUnit;
 @RefreshScope // spring cloud config가 관리하는 파일의 데이터가 변경되면 빈들을 새로고침해주는 어노테이션
 public class UserController {
 
+    // Jenkins 실험 주석
+
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, Object> redisTemplate;
