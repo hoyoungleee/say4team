@@ -54,5 +54,14 @@
   <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"> 
   <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white"> 
 </div>
+
+<div align="left"> 
+  <img src="https://img.shields.io/badge/EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white"> 
+  <img src="https://img.shields.io/badge/Route%2053-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white"> 
+  <img src="https://img.shields.io/badge/CloudFront-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white"> 
+  <img src="https://img.shields.io/badge/Amazon%20MQ-FF9900?style=for-the-badge&logo=apacheactivemq&logoColor=white"> 
+  <img src="https://img.shields.io/badge/ElastiCache-FF9900?style=for-the-badge&logo=redis&logoColor=white"> 
+  <img src="https://img.shields.io/badge/Elastic%20Container%20Registry%20(ECR)-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white"> 
+</div>
   
 
