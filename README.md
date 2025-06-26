@@ -26,7 +26,7 @@
 [3.인터페이스 설계서](https://catkin-krypton-a30.notion.site/1f423e41e54980babbfbd99028452682)<br>   
 [4.테스트 케이스](https://catkin-krypton-a30.notion.site/1f423e41e5498081b8cec04435dbd705)<br><br>
 [5.테스트케이스 결과서](https://catkin-krypton-a30.notion.site/1f423e41e549802981b7ecc8ae204b79)<br><br>
-[6.DevOps 단위 프로젝트 산출물](https://catkin-krypton-a30.notion.site/6-DevOps-21523e41e5498009b26dcf2e3db58cd5)<br>
+[6.DevOps 단위 프로젝트 산출물](https://catkin-krypton-a30.notion.site/MSA-4-1f423e41e5498028a45ef8861f3722bc)<br>
 
 ***************
 
@@ -35,7 +35,6 @@
 🧑‍💻 Frontend
 <div align="left"> <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black"> </div><br>
 ☕ Backend
-
 <div align="left"> <img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white"> <img src="https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white"> <img src="https://img.shields.io/badge/Spring Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white"> </div><br>
 🗄️ Database / Caching / Messaging
 <div align="left"> <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"> <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white"> <img src="https://img.shields.io/badge/Amazon ElastiCache-FF9900?style=for-the-badge&logo=redis&logoColor=white"> <img src="https://img.shields.io/badge/Amazon MQ-FF9900?style=for-the-badge&logo=apacheactivemq&logoColor=white"> </div><br>
